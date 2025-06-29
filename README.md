@@ -338,5 +338,3 @@ For the most current status and detailed task progress, see [TASKS.md](TASKS.md)
 > **Purpose**: Professional project documentation for EvorBrain second brain application
 
 ---
-
-*EvorBrain: Evolve your brain, organize your life* 🧠✨
