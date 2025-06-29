@@ -110,7 +110,7 @@ EvorBrain is a comprehensive second brain application designed to help individua
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │    Backend      │    │   Database      │
 │                 │    │                 │    │                 │
-│ React + TypeScript  │ Bun + Hono.js   │    │     SQLite      │
+│ React + TypeScript   │ Bun + Hono.js   │    │     SQLite      │
 │ Zustand Store   │◄──►│ WebSocket API   │◄──►│ Better-SQLite3  │
 │ TanStack Query  │    │ RESTful Routes  │    │ Hierarchical    │
 │ Shadcn/ui       │    │ Zod Validation  │    │ Schema Design   │
