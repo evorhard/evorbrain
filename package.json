@@ -1,0 +1,76 @@
+{
+  "name": "evorbrain",
+  "version": "0.1.0",
+  "description": "A locally-hosted, hierarchical second brain application for personal knowledge and task management",
+  "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "bun run --parallel frontend:dev backend:dev",
+    "frontend:dev": "cd frontend && bun run dev",
+    "backend:dev": "cd backend && bun run dev",
+    "build": "bun run frontend:build && bun run backend:build",
+    "frontend:build": "cd frontend && bun run build",
+    "backend:build": "cd backend && bun run build",
+    "test": "bun run frontend:test && bun run backend:test",
+    "frontend:test": "cd frontend && bun run test",
+    "backend:test": "cd backend && bun run test",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix && bun run frontend:lint && bun run backend:lint",
+    "lint:check": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "frontend:lint": "cd frontend && bun run lint",
+    "backend:lint": "cd backend && bun run lint",
+    "format": "prettier --write . && bun run frontend:format && bun run backend:format",
+    "format:check": "prettier --check .",
+    "frontend:format": "cd frontend && bun run format",
+    "backend:format": "cd backend && bun run format",
+    "typecheck": "tsc --noEmit && bun run frontend:typecheck && bun run backend:typecheck",
+    "frontend:typecheck": "cd frontend && bun run typecheck",
+    "backend:typecheck": "cd backend && bun run typecheck",
+    "db:setup": "cd backend && bun run db:setup",
+    "db:migrate": "cd backend && bun run db:migrate",
+    "db:seed": "cd backend && bun run db:seed",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.30.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.1.3",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.35.0"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "author": "EvorBrain Development Team",
+  "license": "MIT",
+  "keywords": [
+    "second-brain",
+    "knowledge-management",
+    "task-management",
+    "hierarchical",
+    "productivity",
+    "local-first",
+    "typescript",
+    "bun",
+    "react"
+  ]
+}

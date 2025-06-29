@@ -1,0 +1,54 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "allowJs": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["./shared/*"],
+      "@frontend/*": ["./frontend/src/*"],
+      "@backend/*": ["./backend/src/*"]
+    }
+  },
+  "include": ["shared/**/*", "scripts/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/node_modules",
+    "**/dist",
+    "**/build"
+  ],
+  "references": [
+    {
+      "path": "./frontend"
+    },
+    {
+      "path": "./backend"
+    },
+    {
+      "path": "./shared"
+    }
+  ]
+}

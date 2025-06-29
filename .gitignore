@@ -1,0 +1,393 @@
+# =================================
+# EvorBrain Project .gitignore
+# =================================
+# Tech Stack: Bun, TypeScript, React 18, Vite, Tailwind CSS, Hono.js, SQLite
+# Structure: Monorepo (frontend/, backend/, shared/, docs/)
+# Environment: Windows development, VSCode
+# =================================
+
+# =================================
+# Node.js & Bun Runtime
+# =================================
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Bun specific files
+bun.lockb
+.bun/
+
+# npm/yarn (if accidentally used)
+package-lock.json
+yarn.lock
+yarn-error.log
+
+# =================================
+# TypeScript Build Artifacts
+# =================================
+# Compiled JavaScript
+*.js.map
+*.d.ts.map
+
+# TypeScript cache
+*.tsbuildinfo
+.tscache/
+
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
+
+# =================================
+# React & Vite Frontend
+# =================================
+# Vite build outputs
+frontend/dist/
+frontend/build/
+
+# Vite cache and temporary files
+frontend/.vite/
+frontend/node_modules/
+
+# React development files
+.eslintcache
+
+# Storybook build outputs (if added later)
+storybook-static/
+
+# =================================
+# Tailwind CSS Generated Files
+# =================================
+# Compiled CSS (if not using PostCSS)
+*.css.map
+
+# Tailwind build artifacts
+frontend/src/**/*.css.map
+
+# =================================
+# Backend Build & Runtime
+# =================================
+# Backend build outputs
+backend/dist/
+backend/build/
+
+# Bun cache
+backend/.bun/
+
+# =================================
+# Database & Data Files
+# =================================
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Database specific files
+backend/evorbrain.db
+backend/database/*.db
+backend/database/*.sqlite
+backend/database/*.sqlite3
+
+# Database logs and temporary files
+backend/database/logs/
+backend/database/temp/
+
+# Data migration artifacts (keep migration files, ignore data)
+backend/database/migrations/*.sql.backup
+backend/database/seeds/generated/
+
+# =================================
+# Environment & Configuration
+# =================================
+# Environment files (keep .env.example)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# Local configuration overrides
+config.local.json
+config.local.js
+config.local.ts
+
+# =================================
+# Logs & Temporary Files
+# =================================
+# Application logs
+logs/
+*.log
+*/logs/
+backend/logs/*.log
+frontend/logs/*.log
+
+# npm/bun debug logs
+npm-debug.log*
+bun-debug.log*
+
+# Runtime directories
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary directories
+tmp/
+temp/
+.tmp/
+.temp/
+
+# =================================
+# Development Environment
+# =================================
+# VSCode settings (keep shared settings, ignore personal)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/*.log
+
+# JetBrains IDEs (WebStorm, IntelliJ)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# =================================
+# Operating System Files
+# =================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# =================================
+# Package Manager Caches
+# =================================
+# Bun cache
+.bun/
+
+# npm cache
+.npm/
+.npmrc
+
+# Yarn cache
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# =================================
+# Testing & Coverage
+# =================================
+# Test coverage
+coverage/
+*/coverage/
+.nyc_output/
+.coverage/
+
+# Test artifacts
+test-results/
+test-reports/
+*.lcov
+
+# Jest cache
+.jest/
+
+# Vitest cache (if using Vitest)
+.vitest/
+
+# =================================
+# Build Tools & Bundlers
+# =================================
+# Webpack
+.webpack/
+
+# Rollup
+.rollup.cache/
+
+# Parcel
+.parcel-cache/
+
+# =================================
+# File Uploads & User Content
+# =================================
+# User uploaded files (future feature)
+backend/uploads/
+uploads/
+user-files/
+
+# Generated files
+generated/
+auto-generated/
+
+# =================================
+# Backup & Recovery Files
+# =================================
+# Database backups (keep structure, ignore data)
+backend/backups/*.db
+backend/backups/*.sqlite
+backend/backups/*.sql
+
+# Code backups
+*.backup
+*.bak
+*.orig
+
+# =================================
+# Security & Sensitive Data
+# =================================
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# API keys and secrets (if stored in files)
+secrets/
+.secrets/
+api-keys/
+
+# Authentication tokens
+.auth/
+tokens/
+
+# =================================
+# Documentation Build
+# =================================
+# Generated documentation
+docs/build/
+docs/dist/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# =================================
+# Mobile Development (Future)
+# =================================
+# React Native (if mobile app is added)
+*.hprof
+.expo/
+.bundle/
+
+# =================================
+# Monitoring & Analytics
+# =================================
+# Error tracking
+.sentry/
+sentry-debug-files/
+
+# Analytics data
+analytics/
+metrics/
+
+# =================================
+# Docker & Containerization (Future)
+# =================================
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# =================================
+# Version Control
+# =================================
+# Git
+.git/
+.gitconfig
+
+# SVN
+.svn/
+
+# Mercurial
+.hg/
+
+# =================================
+# Miscellaneous
+# =================================
+# Lock files for tools
+*.lock
+
+# Editor directories and files
+.vs/
+.vscode/extensions.json
+
+# Project specific temporary files
+.scratch/
+scratch/
+
+# Performance profiling
+*.prof
+*.trace
+
+# Memory dumps
+*.heapsnapshot
+
+# =================================
+# KEEP THESE FILES (Explicit Inclusion)
+# =================================
+# These files should be tracked despite patterns above
+!.env.example
+!.gitkeep
+!.prettierrc
+!.eslintrc*
+!.husky/
+!docs/README.md
+!*/README.md
+
+# =================================
+# Custom Project Exclusions
+# =================================
+# Add project-specific exclusions here as needed
+# Example: vendor-specific files, generated assets, etc.
