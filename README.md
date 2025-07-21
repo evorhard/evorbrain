@@ -3,20 +3,25 @@
 <div align="center">
   <img src="logo.png" alt="EvorBrain Logo" width="200"/>
   <p><strong>An offline-first, open-source personal knowledge management system</strong></p>
+  
+  > ⚠️ **Project Status: Under Construction** ⚠️
+  > 
+  > This project is currently in early development. Features and documentation are being actively developed.
+  > See [TASKS.md](TASKS.md) for detailed development roadmap and [ROADMAP.md](ROADMAP.md) for planned milestones.
+  
   <p>
-    <a href="#features">Features</a> •
-    <a href="#installation">Installation</a> •
-    <a href="#usage">Usage</a> •
+    <a href="#planned-features">Planned Features</a> •
     <a href="#development">Development</a> •
-    <a href="#contributing">Contributing</a>
+    <a href="#contributing">Contributing</a> •
+    <a href="#roadmap">Roadmap</a>
   </p>
 </div>
 
 ## Overview
 
-EvorBrain is a powerful, customizable personal knowledge management system designed for offline-first operation. Built with modern web technologies and packaged as a native desktop application using Tauri, it combines the best features of tools like Notion and Obsidian while maintaining complete data ownership and privacy.
+EvorBrain will be a powerful, customizable personal knowledge management system designed for offline-first operation. Built with modern web technologies and packaged as a native desktop application using Tauri, it will combine the best features of tools like Notion and Obsidian while maintaining complete data ownership and privacy.
 
-## Features
+## Planned Features
 
 ### 🎯 Core Functionality
 
@@ -62,105 +67,24 @@ EvorBrain is a powerful, customizable personal knowledge management system desig
 - Keyboard shortcuts
 - Template system for common workflows
 
-## Installation
+## Current Status
 
-### System Requirements
+🚧 **In Development** - The application is not yet ready for use. See the development section below to run from source.
+
+### Planned System Requirements
 
 - **Windows**: Windows 10/11 (64-bit)
-- **macOS**: macOS 10.15+ (coming soon)
-- **Linux**: Ubuntu 20.04+ or equivalent (coming soon)
+- **macOS**: macOS 10.15+ (planned)
+- **Linux**: Ubuntu 20.04+ or equivalent (planned)
 - **Memory**: 4GB RAM minimum, 8GB recommended
 - **Storage**: 500MB for application, additional space for your data
 
-### Download
+### Future Installation
 
-Download the latest release from the [Releases](https://github.com/yourusername/evorbrain/releases) page:
-
-1. Download `EvorBrain-Setup-x.x.x.exe` for Windows
-2. Run the installer
-3. Follow the installation wizard
-
-### Build from Source
-
-Prerequisites:
-- Node.js 18+
-- pnpm 8+
-- Rust 1.70+
-- Tauri CLI
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/evorbrain.git
-cd evorbrain
-
-# Install dependencies
-pnpm install
-
-# Build desktop app
-pnpm --filter desktop build
-
-# Or run in development mode
-pnpm --filter desktop dev
-```
-
-## Usage
-
-### Getting Started
-
-1. **Create Your First Life Area**
-   - Click "New Area" in the sidebar
-   - Name it (e.g., "Work", "Personal", "Health")
-   - Add a description and icon
-
-2. **Add Goals**
-   - Within a Life Area, click "Add Goal"
-   - Define long-term objectives
-   - Link them to your Life Area
-
-3. **Create Projects**
-   - Click "New Project" 
-   - Set a clear endpoint and timeline
-   - Associate with relevant Goals
-
-4. **Manage Tasks**
-   - Add tasks within projects or as standalone items
-   - Set due dates and recurrence patterns
-   - Tag for cross-cutting organization
-
-### Keyboard Shortcuts
-
-- `Ctrl/Cmd + N`: New task
-- `Ctrl/Cmd + P`: Quick search
-- `Ctrl/Cmd + K`: Command palette
-- `Ctrl/Cmd + \`: Toggle sidebar
-- `Ctrl/Cmd + 1-3`: Switch between views
-
-### Data Storage
-
-Your data is stored in:
-- **Windows**: `%APPDATA%/evorbrain/data/`
-- **macOS**: `~/Library/Application Support/evorbrain/data/`
-- **Linux**: `~/.config/evorbrain/data/`
-
-Each item is a markdown file with YAML frontmatter:
-
-```markdown
----
-id: unique-id-here
-type: task
-title: Example Task
-status: in-progress
-tags: [important, work]
-parent: project-id
-created: 2025-01-20T10:00:00
-modified: 2025-01-20T14:30:00
-due: 2025-01-25T10:00:00
----
-
-# Example Task
-
-Task description and notes go here...
-```
+Once development is complete, installation will be available via:
+- Direct download from GitHub Releases
+- Package managers (Windows Store, Mac App Store, Linux repositories)
+- Portable versions for all platforms
 
 ## Development
 
@@ -182,49 +106,56 @@ EvorBrain uses a monorepo structure with:
 - **Build Tool**: Vite
 - **Database**: SQLite with FTS5
 
-### Development Commands
+### Development Setup
+
+Prerequisites:
+- Node.js 18+
+- pnpm 8+
+- Rust 1.70+
+- Tauri CLI
 
 ```bash
-# Install dependencies
+# Clone the repository
+git clone https://github.com/yourusername/evorbrain.git
+cd evorbrain
+
+# Install dependencies (when package.json is created)
 pnpm install
 
-# Run desktop app in dev mode
-pnpm --filter desktop dev
-
-# Run tests
-pnpm test
-
-# Lint code
-pnpm lint
-
-# Build all packages
-pnpm build
+# Future development commands:
+# pnpm --filter desktop dev    # Run desktop app in dev mode
+# pnpm test                    # Run tests
+# pnpm lint                    # Lint code
+# pnpm build                   # Build all packages
 ```
 
 ### Plugin Development
 
-Create a new plugin:
+Plugin system is planned for Phase 4 of development. Documentation will be available once the core system is implemented.
 
-```bash
-pnpm create-plugin my-plugin
-```
+## Roadmap
 
-See the [Plugin Development Guide](docs/plugin-development.md) for details.
+Development is organized into phases:
+
+- **Phase 1**: Foundation (Project setup, Tauri integration, basic structure)
+- **Phase 2**: Core Features (Data model, file storage, basic UI)
+- **Phase 3**: Enhanced Features (Calendar, drag-and-drop, advanced UI)
+- **Phase 4**: Plugin System (Extensibility and third-party plugins)
+- **Phase 5**: Performance & Polish (Optimization, testing, security)
+- **Phase 6**: Release (Distribution, documentation, community)
+
+See [ROADMAP.md](ROADMAP.md) for detailed milestones and [TASKS.md](TASKS.md) for granular task breakdown.
 
 ## Contributing
 
-I welcome contributions! Please see the [Contributing Guide](CONTRIBUTING.md) for details on:
+Contributions are welcome once the basic architecture is established! Early contributors can help with:
 
-- Code of Conduct
-- Development setup
-- Submitting pull requests
-- Reporting issues
+- Architecture feedback and suggestions
+- Testing and bug reports (once testable builds are available)
+- Documentation improvements
+- Plugin development (Phase 4+)
 
-### Contributors
-
-<a href="https://github.com/yourusername/evorbrain/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=yourusername/evorbrain" />
-</a>
+Formal contributing guidelines will be established during Phase 1 development.
 
 ## License
 
@@ -232,15 +163,20 @@ EvorBrain is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for d
 
 ## Acknowledgments
 
-- Built with [Tauri](https://tauri.app/)
-- UI powered by [Mantine](https://mantine.dev/) and [Tailwind CSS](https://tailwindcss.com/)
-- Icons from [Tabler Icons](https://tabler-icons.io/)
+This project will be built with amazing open-source technologies:
 
-## Support
+- [Tauri](https://tauri.app/) - Secure, lightweight desktop framework
+- [React](https://react.dev/) - UI library
+- [Mantine](https://mantine.dev/) - React components library
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Zustand](https://github.com/pmndrs/zustand) - State management
+- [SQLite](https://sqlite.org/) - Local database
 
-- 📖 [Documentation](https://evorbrain.dev/docs)
-- 💬 [Discussions](https://github.com/yourusername/evorbrain/discussions)
-- 🐛 [Issue Tracker](https://github.com/yourusername/evorbrain/issues)
-- 📧 Email: support@evorbrain.dev
+## Get Involved
+
+- 💬 [GitHub Discussions](https://github.com/yourusername/evorbrain/discussions) - Ask questions, share ideas
+- 🐛 [Issue Tracker](https://github.com/yourusername/evorbrain/issues) - Report bugs, request features
+- 📋 [Project Board](https://github.com/yourusername/evorbrain/projects) - Track development progress
 
 ---
