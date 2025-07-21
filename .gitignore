@@ -1,0 +1,241 @@
+# EvorBrain - Comprehensive .gitignore
+# Tauri + React + TypeScript + pnpm monorepo
+
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+pnpm-debug.log*
+.yarn/
+.yarn-integrity
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vuepress/dist
+
+# Tauri build outputs
+src-tauri/target/
+src-tauri/WixTools/
+src-tauri/gen/
+apps/*/src-tauri/target/
+packages/*/src-tauri/target/
+
+# TypeScript
+*.tsbuildinfo
+.tsc-cache/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# IDE and editors
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# Test outputs
+.jest-cache/
+test-results/
+playwright-report/
+test-results/
+coverage/
+
+# Temporary folders
+tmp/
+temp/
+.tmp/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Stylelint cache
+.stylelintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.production
+
+# Storybook build outputs
+storybook-static/
+
+# Database files (SQLite)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# User data directories
+user-data/
+data/
+storage/
+backups/
+
+# Application-specific files
+*.md.backup
+*.md.tmp
+markdown-cache/
+search-index/
+
+# Plugin development
+plugins/*/node_modules/
+plugins/*/dist/
+plugins/*/.cache/
+
+# Release artifacts
+releases/
+installers/
+packages/*.dmg
+packages/*.exe
+packages/*.msi
+packages/*.deb
+packages/*.rpm
+packages/*.AppImage
+
+# Code signing certificates and keys
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+codesign/
+
+# Auto-generated files
+generated/
+auto-generated/
+
+# Benchmark results
+benchmarks/results/
+*.benchmark
+
+# Performance profiling
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# Documentation build outputs
+docs/build/
+docs/dist/
+api-docs/
+
+# Backup files
+*.backup
+*.bak
+*.old
+*.orig
+
+# Lock files (keep pnpm-lock.yaml but ignore others)
+package-lock.json
+yarn.lock
+
+# Rust-specific (for Tauri backend)
+**/*.rs.bk
+Cargo.lock
+.rustfmt_cache
+
+# Platform-specific build artifacts
+*.app
+*.exe
+*.msi
+*.dmg
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# Development certificates
+dev-certs/
+*.localhost.*
+
+# AI-generated content (temporary)
+.ai-temp/
+.claude-temp/
+
+# Claude related
+CLAUDE.md
+
+# Local configuration overrides
+local.config.js
+local.config.ts
+.env.local.example
+
+# Monorepo-specific
+.rush/
+.pnp.*
