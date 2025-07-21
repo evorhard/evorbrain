@@ -116,7 +116,7 @@ Prerequisites:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/evorbrain.git
+git clone https://github.com/evorhard/evorbrain.git
 cd evorbrain
 
 # Install dependencies (when package.json is created)
@@ -175,8 +175,8 @@ This project will be built with amazing open-source technologies:
 
 ## Get Involved
 
-- 💬 [GitHub Discussions](https://github.com/yourusername/evorbrain/discussions) - Ask questions, share ideas
-- 🐛 [Issue Tracker](https://github.com/yourusername/evorbrain/issues) - Report bugs, request features
-- 📋 [Project Board](https://github.com/yourusername/evorbrain/projects) - Track development progress
+- 💬 [GitHub Discussions](https://github.com/evorhard/evorbrain/discussions) - Ask questions, share ideas
+- 🐛 [Issue Tracker](https://github.com/evorhard/evorbrain/issues) - Report bugs, request features
+- 📋 [Project Board](https://github.com/evorhard/evorbrain/projects) - Track development progress
 
 ---
