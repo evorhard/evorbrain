@@ -10,9 +10,14 @@
     "src/**/*.d.ts"
   ],
   "scripts": {
+    "test": "echo \"No tests for types package\"",
+    "test:ci": "echo \"No tests for types package\"",
+    "test:coverage": "echo \"No tests for types package\"",
     "lint": "eslint . --ext .ts,.d.ts",
     "format": "prettier --write \"src/**/*.d.ts\"",
+    "format:check": "prettier --check \"src/**/*.d.ts\"",
     "typecheck": "tsc --noEmit",
+    "analyze": "pnpm run lint && pnpm run typecheck && pnpm run format:check",
     "clean": "rm -rf node_modules .turbo"
   },
   "devDependencies": {

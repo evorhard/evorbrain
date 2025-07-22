@@ -21,9 +21,13 @@
     "dev": "tsc --watch",
     "build": "tsc",
     "test": "vitest",
+    "test:ci": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
+    "analyze": "pnpm run lint && pnpm run typecheck && pnpm run format:check",
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
