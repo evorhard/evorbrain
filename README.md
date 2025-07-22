@@ -1,7 +1,7 @@
 # EvorBrain
 
 <div align="center">
-  <img src="logo.png" alt="EvorBrain Logo" width="200"/>
+  <!-- <img src="logo.png" alt="EvorBrain Logo" width="200"/> -->
   <p><strong>An offline-first, open-source personal knowledge management system</strong></p>
   
   > ⚠️ **Project Status: Under Construction** ⚠️
