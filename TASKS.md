@@ -39,10 +39,10 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Set up Prettier with consistent formatting
   - [x] Configure import sorting and unused imports
   - [x] Add lint scripts to package.json
-- [ ] **TASK-006**: Set up Git hooks with Husky - 🟢
-  - [ ] Install Husky and lint-staged
-  - [ ] Configure pre-commit hooks for linting
-  - [ ] Add commit message validation
+- [x] **TASK-006**: Set up Git hooks with Husky - 🟢
+  - [x] Install Husky and lint-staged
+  - [x] Configure pre-commit hooks for linting
+  - [x] Add commit message validation
 - [ ] **TASK-007**: Create CI/CD pipeline scaffolding - 🟡
   - [ ] Set up GitHub Actions workflow structure
   - [ ] Configure automated testing pipeline

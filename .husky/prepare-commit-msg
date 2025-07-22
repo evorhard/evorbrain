@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+# Only add template for new commits (not amends or merges)
+COMMIT_SOURCE=$2
+if [ -z "$COMMIT_SOURCE" ]; then
+  cat > "$1" << 'EOF'
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+#
+# Types: feat, fix, docs, style, refactor, perf, test, chore, build, ci, revert
+# 
+# Examples:
+#   feat: add user authentication
+#   fix(api): resolve database connection issue
+#   docs: update installation guide
+#
+# Remember:
+# - Use present tense ("add" not "added")
+# - Don't capitalize first letter
+# - No period at the end of subject line
+# - Subject line max 100 characters
+# - Wrap body at 72 characters
+EOF
+fi

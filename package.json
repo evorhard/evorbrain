@@ -51,6 +51,8 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-unused-imports": "^3.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "prettier": "^3.1.0",
@@ -61,8 +63,14 @@
       "eslint --fix",
       "prettier --write"
     ],
+    "*.{css,scss,less}": [
+      "prettier --write"
+    ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
+    ],
+    "*.rs": [
+      "echo 'Rust files should be formatted with rustfmt in the Tauri project'"
     ]
   }
 }
