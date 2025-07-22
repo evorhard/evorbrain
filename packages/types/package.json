@@ -1,0 +1,19 @@
+{
+  "name": "@evorbrain/types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript type definitions for EvorBrain",
+  "author": "Edvard Evorhard <edvard@evorhard.com>",
+  "license": "Apache-2.0",
+  "type": "module",
+  "types": "./src/index.d.ts",
+  "files": [
+    "src/**/*.d.ts"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules .turbo"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
+}

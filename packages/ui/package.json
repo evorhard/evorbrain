@@ -34,6 +34,7 @@
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
+    "@evorbrain/types": "workspace:*",
     "@evorbrain/core": "workspace:*",
     "@mantine/core": "^7.3.0",
     "@mantine/hooks": "^7.3.0",

@@ -28,6 +28,7 @@
     "clean": "rm -rf dist node_modules .turbo docs"
   },
   "dependencies": {
+    "@evorbrain/types": "workspace:*",
     "@evorbrain/core": "workspace:*",
     "zod": "^3.22.4"
   },

@@ -20,6 +20,7 @@
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
+    "@evorbrain/types": "workspace:*",
     "@evorbrain/core": "workspace:*",
     "@evorbrain/ui": "workspace:*",
     "@mantine/core": "^7.3.0",

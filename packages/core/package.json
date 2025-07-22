@@ -27,6 +27,7 @@
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
+    "@evorbrain/types": "workspace:*",
     "nanoid": "^5.0.4",
     "zod": "^3.22.4"
   },

@@ -28,5 +28,12 @@
     "build",
     "coverage",
     "src-tauri"
+  ],
+  "references": [
+    { "path": "./packages/types" },
+    { "path": "./packages/core" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/plugin-api" },
+    { "path": "./apps/desktop" }
   ]
 }

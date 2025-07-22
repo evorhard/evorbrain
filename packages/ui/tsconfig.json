@@ -12,6 +12,7 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.tsx", "**/*.spec.tsx", "**/*.stories.tsx"],
   "references": [
+    { "path": "../types" },
     { "path": "../core" }
   ]
 }
