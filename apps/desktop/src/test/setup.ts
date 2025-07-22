@@ -1,1 +1,2 @@
-import '@testing-library/jest-dom';
+// Test setup for Vitest
+// Add global test setup here as needed
