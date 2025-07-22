@@ -1,27 +1,61 @@
-# EvorBrain
-
 <div align="center">
-  <!-- <img src="logo.png" alt="EvorBrain Logo" width="200"/> -->
-  <p><strong>An offline-first, open-source personal knowledge management system</strong></p>
+  <h1>
+    <br>
+    🧠 EvorBrain
+    <br>
+  </h1>
   
-  > ⚠️ **Project Status: Under Construction** ⚠️
-  > 
-  > This project is currently in early development. Features and documentation are being actively developed.
-  > See [TASKS.md](TASKS.md) for detailed development roadmap and [ROADMAP.md](ROADMAP.md) for planned milestones.
+  <h3>An offline-first, open-source personal knowledge management system</h3>
   
   <p>
-    <a href="#planned-features">Planned Features</a> •
-    <a href="#development">Development</a> •
-    <a href="#contributing">Contributing</a> •
-    <a href="#roadmap">Roadmap</a>
+    <img src="https://img.shields.io/badge/Status-Under_Construction-orange?style=for-the-badge" alt="Status: Under Construction" />
+    <img src="https://img.shields.io/badge/Phase-1_Foundation-blue?style=for-the-badge" alt="Phase 1: Foundation" />
+    <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License: Apache 2.0" />
   </p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Tauri-2.0-FFC131?style=flat-square&logo=tauri&logoColor=white" alt="Tauri" />
+    <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React" />
+    <img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/SQLite-FTS5-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite" />
+  </p>
+  
+  <h4>
+    <a href="#-planned-features">Features</a>
+    <span> · </span>
+    <a href="#-development">Development</a>
+    <span> · </span>
+    <a href="#-roadmap">Roadmap</a>
+    <span> · </span>
+    <a href="#-contributing">Contributing</a>
+  </h4>
+  
+  <br>
+  
+  <div style="background-color: #fff3cd; border: 2px solid #ffeaa7; border-radius: 8px; padding: 16px; margin: 16px auto; max-width: 600px;">
+    <h3 style="margin: 0 0 8px 0;">⚠️ Project Status: Under Construction</h3>
+    <p style="margin: 0;">
+      This project is currently in early development. Features and documentation are being actively developed.
+      See <a href="TASKS.md">TASKS.md</a> for detailed development roadmap and <a href="ROADMAP.md">ROADMAP.md</a> for planned milestones.
+    </p>
+  </div>
 </div>
 
-## Overview
+## 🌟 Overview
+
+> **Your knowledge, your control, your privacy.**
 
 EvorBrain will be a powerful, customizable personal knowledge management system designed for offline-first operation. Built with modern web technologies and packaged as a native desktop application using Tauri, it will combine the best features of tools like Notion and Obsidian while maintaining complete data ownership and privacy.
 
-## Planned Features
+✨ **Why EvorBrain?**
+- 🔒 **100% Offline** - Your data never leaves your device
+- 📝 **Markdown-based** - Future-proof and portable
+- ⚡ **Lightning Fast** - Native performance with Rust backend
+- 🎨 **Beautiful UI** - Modern, intuitive interface
+- 🔧 **Extensible** - Plugin system for custom workflows
+- 🌍 **Open Source** - Transparent and community-driven
+
+## 📋 Planned Features
 
 ### 🎯 Core Functionality
 
@@ -67,9 +101,34 @@ EvorBrain will be a powerful, customizable personal knowledge management system 
 - Keyboard shortcuts
 - Template system for common workflows
 
-## Current Status
+## 📊 Current Status
 
-🚧 **In Development** - The application is not yet ready for use. See the development section below to run from source.
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">🚧</td>
+      <td><strong>Phase 1: Foundation</strong></td>
+      <td>In Progress</td>
+    </tr>
+    <tr>
+      <td align="center">📦</td>
+      <td><strong>Monorepo Setup</strong></td>
+      <td>✅ Complete</td>
+    </tr>
+    <tr>
+      <td align="center">🦀</td>
+      <td><strong>Tauri Integration</strong></td>
+      <td>⏳ Next Up</td>
+    </tr>
+    <tr>
+      <td align="center">⚛️</td>
+      <td><strong>React Foundation</strong></td>
+      <td>⏳ Planned</td>
+    </tr>
+  </table>
+</div>
+
+**🚧 Note:** The application is not yet ready for use. See the development section below to run from source.
 
 ### Planned System Requirements
 
@@ -86,9 +145,9 @@ Once development is complete, installation will be available via:
 - Package managers (Windows Store, Mac App Store, Linux repositories)
 - Portable versions for all platforms
 
-## Development
+## 🛠 Development
 
-### Architecture
+### 🏗 Architecture
 
 EvorBrain uses a monorepo structure with:
 - **apps/desktop**: Tauri desktop application
@@ -97,7 +156,7 @@ EvorBrain uses a monorepo structure with:
 - **packages/plugin-api**: Plugin system APIs
 - **plugins/**: Built-in plugins
 
-### Tech Stack
+### 💻 Tech Stack
 
 - **Desktop Framework**: Tauri 2.0
 - **Frontend**: React 18 + TypeScript
@@ -106,13 +165,31 @@ EvorBrain uses a monorepo structure with:
 - **Build Tool**: Vite
 - **Database**: SQLite with FTS5
 
-### Development Setup
+### 🚀 Development Setup
 
-Prerequisites:
-- Node.js 18+
-- pnpm 8+
-- Rust 1.70+
-- Tauri CLI
+#### Prerequisites:
+<table>
+  <tr>
+    <td>📦 Node.js</td>
+    <td>18+ (LTS)</td>
+    <td><a href="https://nodejs.org/">Download</a></td>
+  </tr>
+  <tr>
+    <td>📦 pnpm</td>
+    <td>8+</td>
+    <td><code>npm install -g pnpm</code></td>
+  </tr>
+  <tr>
+    <td>🦀 Rust</td>
+    <td>1.70+</td>
+    <td><a href="https://rustup.rs/">Install</a></td>
+  </tr>
+  <tr>
+    <td>🔧 Tauri CLI</td>
+    <td>2.0</td>
+    <td><code>cargo install tauri-cli</code></td>
+  </tr>
+</table>
 
 ```bash
 # Clone the repository
@@ -133,37 +210,56 @@ pnpm install
 
 Plugin system is planned for Phase 4 of development. Documentation will be available once the core system is implemented.
 
-## Roadmap
+## 🗺 Roadmap
 
-Development is organized into phases:
+Development is organized into six phases:
 
-- **Phase 1**: Foundation (Project setup, Tauri integration, basic structure)
-- **Phase 2**: Core Features (Data model, file storage, basic UI)
-- **Phase 3**: Enhanced Features (Calendar, drag-and-drop, advanced UI)
-- **Phase 4**: Plugin System (Extensibility and third-party plugins)
-- **Phase 5**: Performance & Polish (Optimization, testing, security)
-- **Phase 6**: Release (Distribution, documentation, community)
+| Phase | Focus | Status |
+|-------|-------|--------|
+| **1️⃣ Foundation** | Project setup, Tauri integration, basic structure | 🚧 In Progress |
+| **2️⃣ Core Features** | Data model, file storage, basic UI | ⏳ Planned |
+| **3️⃣ Enhanced Features** | Calendar, drag-and-drop, advanced UI | ⏳ Planned |
+| **4️⃣ Plugin System** | Extensibility and third-party plugins | ⏳ Planned |
+| **5️⃣ Performance & Polish** | Optimization, testing, security | ⏳ Planned |
+| **6️⃣ Release** | Distribution, documentation, community | ⏳ Planned |
 
 See [ROADMAP.md](ROADMAP.md) for detailed milestones and [TASKS.md](TASKS.md) for granular task breakdown.
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome once the basic architecture is established! Early contributors can help with:
+Contributions are welcome once the basic architecture is established! 
 
-- Architecture feedback and suggestions
-- Testing and bug reports (once testable builds are available)
+### How You Can Help:
+
+🏗 **Architecture Phase** (Current)
+- Review and provide feedback on architecture decisions
+- Suggest improvements to the development workflow
+- Help with documentation and planning
+
+🧪 **Testing Phase** (Coming Soon)
+- Test early builds and report bugs
+- Provide UX/UI feedback
+- Help with cross-platform testing
+
+🔌 **Plugin Phase** (Phase 4+)
+- Develop plugins for specific workflows
+- Create themes and customizations
+- Build integrations with other tools
+
+📚 **Always Welcome**
 - Documentation improvements
-- Plugin development (Phase 4+)
+- Translation help (Phase 5+)
+- Community support and engagement
 
-Formal contributing guidelines will be established during Phase 1 development.
+> 📋 Formal contributing guidelines will be established during Phase 1 development.
 
-## License
+## 📄 License
 
-EvorBrain is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+EvorBrain is licensed under the **Apache License 2.0**. See [LICENSE](LICENSE) for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-This project will be built with amazing open-source technologies:
+This project is being built with these amazing open-source technologies:
 
 - [Tauri](https://tauri.app/) - Secure, lightweight desktop framework
 - [React](https://react.dev/) - UI library
@@ -173,10 +269,15 @@ This project will be built with amazing open-source technologies:
 - [Zustand](https://github.com/pmndrs/zustand) - State management
 - [SQLite](https://sqlite.org/) - Local database
 
-## Get Involved
+## 💬 Get Involved
 
-- 💬 [GitHub Discussions](https://github.com/evorhard/evorbrain/discussions) - Ask questions, share ideas
-- 🐛 [Issue Tracker](https://github.com/evorhard/evorbrain/issues) - Report bugs, request features
-- 📋 [Project Board](https://github.com/evorhard/evorbrain/projects) - Track development progress
+<div align="center">
+  
+| Platform | Purpose | Link |
+|----------|---------|------|
+| 💬 **Discussions** | Ask questions, share ideas | [Join the conversation](https://github.com/evorhard/evorbrain/discussions) |
+| 🐛 **Issues** | Report bugs, request features | [View issues](https://github.com/evorhard/evorbrain/issues) |
+| 📋 **Project Board** | Track development progress | [See progress](https://github.com/evorhard/evorbrain/projects) |
+| ⭐ **Star** | Show your support | [Star this repo](https://github.com/evorhard/evorbrain) |
 
----
+</div>
