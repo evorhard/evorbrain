@@ -10,6 +10,8 @@
     "src/**/*.d.ts"
   ],
   "scripts": {
+    "lint": "eslint . --ext .ts,.d.ts",
+    "format": "prettier --write \"src/**/*.d.ts\"",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf node_modules .turbo"
   },

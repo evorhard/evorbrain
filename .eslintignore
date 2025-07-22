@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+coverage/
+.next/
+.turbo/
+out/
+target/
+
+# Generated files
+*.min.js
+*.min.css
+*.generated.*
+generated/
+
+# Tauri
+src-tauri/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test snapshots
+*.snap
+
+# Temporary
+*.tmp
+*.temp
+.cache/
+
+# Other
+*.db
+*.sqlite
