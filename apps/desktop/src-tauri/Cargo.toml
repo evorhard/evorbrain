@@ -1,0 +1,36 @@
+[package]
+name = "evorbrain"
+version = "0.1.0"
+description = "EvorBrain - Offline-first personal knowledge management system"
+authors = ["Evert de Ruiter <evorhard@gmail.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/evorhard/evorbrain"
+edition = "2021"
+rust-version = "1.75"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0", features = ["macos-private-api"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rusqlite = { version = "0.30", features = ["bundled"] }
+tokio = { version = "1", features = ["full"] }
+thiserror = "1.0"
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+log = "0.4"
+env_logger = "0.10"
+
+[features]
+# This feature is used for production builds or when `devPath` points to the filesystem
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

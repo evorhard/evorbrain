@@ -19,9 +19,25 @@ This document tracks the development environment setup for the EvorBrain project
    cargo install tauri-cli --version "^2.0.0"
    ```
 
+### Tauri Application Setup (Completed)
+
+The Tauri application structure has been initialized in `apps/desktop/src-tauri/` with:
+
+- `Cargo.toml` - Rust dependencies and project configuration
+- `tauri.conf.json` - Tauri application configuration
+- `build.rs` - Build script for Tauri
+- `src/main.rs` - Main application entry point
+- Module structure:
+  - `commands/` - Tauri command handlers
+  - `database/` - SQLite database initialization
+  - `errors/` - Error handling types
+  - `models/` - Data models for entities
+  - `utils/` - Utility functions
+- `capabilities/` - Tauri v2 permissions configuration
+
 ### Next Steps
 
-- Initialize Tauri application structure (TASK-009)
+- Configure Tauri permissions (TASK-010)
 - Configure React frontend with Vite (TASK-014)
 - Set up TypeScript and ESLint configuration
 
