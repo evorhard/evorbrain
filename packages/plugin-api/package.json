@@ -37,8 +37,8 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^24.1.0",
     "typedoc": "^0.25.4",
-    "vitest": "^1.0.4"
+    "vitest": "^3.2.4"
   }
 }
