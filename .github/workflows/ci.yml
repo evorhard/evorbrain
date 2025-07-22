@@ -117,16 +117,16 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './apps/desktop/src-tauri -> target'
 
       - name: Run Rust tests
         run: |
-          cd src-tauri
+          cd apps/desktop/src-tauri
           cargo test --all-features
 
       - name: Run clippy
         run: |
-          cd src-tauri
+          cd apps/desktop/src-tauri
           cargo clippy -- -D warnings
 
   build:
@@ -179,13 +179,14 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './apps/desktop/src-tauri -> target'
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          projectPath: apps/desktop
           args: --target ${{ matrix.target }}
 
       - name: Upload artifacts
@@ -193,13 +194,13 @@ jobs:
         with:
           name: evorbrain-${{ matrix.target }}
           path: |
-            src-tauri/target/release/bundle/
-            src-tauri/target/${{ matrix.target }}/release/bundle/
+            apps/desktop/src-tauri/target/release/bundle/
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/
           retention-days: 7
 
   security:
     name: Security Audit
-    runs-on: ubuntu-latest  # Security checks are platform-independent
+    runs-on: ubuntu-latest # Security checks are platform-independent
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -227,5 +228,5 @@ jobs:
       - name: Run cargo audit
         run: |
           cargo install cargo-audit
-          cd src-tauri
+          cd apps/desktop/src-tauri
           cargo audit
