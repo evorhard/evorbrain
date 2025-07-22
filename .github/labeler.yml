@@ -1,0 +1,47 @@
+# Configuration for GitHub labeler action
+
+frontend:
+  - apps/desktop/**/*
+  - packages/ui/**/*
+  - '**/*.tsx'
+  - '**/*.ts'
+  - '**/*.css'
+
+backend:
+  - src-tauri/**/*
+  - '**/*.rs'
+
+documentation:
+  - '**/*.md'
+  - docs/**/*
+
+dependencies:
+  - package.json
+  - pnpm-lock.yaml
+  - '**/package.json'
+  - src-tauri/Cargo.toml
+  - src-tauri/Cargo.lock
+
+ci/cd:
+  - .github/workflows/**/*
+  - .github/**/*
+
+config:
+  - '**/*.json'
+  - '**/*.yml'
+  - '**/*.yaml'
+  - .eslintrc*
+  - .prettierrc*
+  - tsconfig.json
+  - vite.config.ts
+
+tests:
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - '__tests__/**/*'
+
+plugin:
+  - packages/plugin-api/**/*
+  - plugins/**/*
