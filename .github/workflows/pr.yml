@@ -67,7 +67,7 @@ jobs:
 
       - name: Check for dependency changes
         id: deps
-        uses: tj-actions/changed-files@v39
+        uses: tj-actions/changed-files@v46
         with:
           files: |
             package.json
