@@ -1,60 +1,54 @@
+# Dependabot configuration for automated dependency updates
 version: 2
 updates:
-  # JavaScript/TypeScript dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
+  # Enable version updates for npm dependencies
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "sunday"
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
     open-pull-requests-limit: 10
-    labels:
-      - "dependencies"
-      - "javascript"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
+    # Group dependencies to reduce PR noise
     groups:
-      dev-dependencies:
-        patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-          - "*test*"
-          - "*dev*"
       production-dependencies:
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
+      dev-dependencies:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+    # Add labels to PRs
+    labels:
+      - 'dependencies'
+      - 'automated'
+    # Assign reviewers if you have collaborators
+    # reviewers:
+    #   - "username"
+    # Allow specific dependencies to be updated
+    allow:
+      - dependency-type: 'all'
+    # Ignore specific dependencies if needed
+    # ignore:
+    #   - dependency-name: "example-package"
+    #     versions: ["1.x", "2.x"]
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
+    open-pull-requests-limit: 5
+    labels:
+      - 'ci/cd'
+      - 'automated'
+    # Group all GitHub Actions updates together
+    groups:
+      github-actions:
         patterns:
-          - "*"
-        exclude-patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-          - "*test*"
-          - "*dev*"
-
-  # Rust dependencies
-  - package-ecosystem: "cargo"
-    directory: "/src-tauri"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "rust"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "ci/cd"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
+          - '*'
