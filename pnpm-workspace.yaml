@@ -1,0 +1,13 @@
+# pnpm workspace configuration for EvorBrain monorepo
+packages:
+  # Desktop application
+  - 'apps/*'
+  
+  # Shared packages
+  - 'packages/*'
+  
+  # Plugin packages
+  - 'plugins/*'
+  
+  # Development tools and utilities
+  - 'tools/*'

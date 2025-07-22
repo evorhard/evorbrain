@@ -21,10 +21,10 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Create detailed TASKS.md breakdown
   - [x] Write PLANNING.md with technical decisions
   - [x] Create CLAUDE.md for AI assistant integration
-- [ ] **TASK-002**: Initialize pnpm monorepo structure - 🟢
-  - [ ] Create root package.json with workspace configuration
-  - [ ] Set up pnpm-workspace.yaml
-  - [ ] Configure shared dependencies and scripts
+- [x] **TASK-002**: Initialize pnpm monorepo structure - 🟢
+  - [x] Create root package.json with workspace configuration
+  - [x] Set up pnpm-workspace.yaml
+  - [x] Configure shared dependencies and scripts
 - [ ] **TASK-003**: Configure workspace packages - 🟢
   - [ ] Create apps/desktop package structure
   - [ ] Set up packages/core for shared business logic
