@@ -1,0 +1,21 @@
+[package]
+name = "evorbrain"
+version = "0.1.0"
+description = "EvorBrain - Personal Knowledge Management System"
+authors = ["Evert de Ruiter <evorhard@gmail.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/evorhard/evorbrain"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-alpha", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0-alpha", features = [] }
+tauri-plugin-shell = "2.0.0-alpha"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
