@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic documentation including README, SECURITY, LICENSE
 - Plugin system architecture design
 - Feature-Sliced Design (FSD) implementation
+- CI/CD pipeline with GitHub Actions:
+  - Automated testing for frontend and Rust code
+  - Multi-platform build support (Windows, macOS, Linux)
+  - Code quality checks (ESLint, Prettier, Clippy)
+  - Security auditing with npm audit and cargo audit
+  - Release automation with changelog generation
+  - Pull request automation and labeling
+  - Dependency updates with Dependabot
+  - Documentation deployment to GitHub Pages
+  - Code coverage reporting
+  - Bundle size analysis
+  - Lighthouse performance testing
 
 ### Changed
 - N/A
@@ -106,10 +118,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Links
 
-- [Unreleased]: https://github.com/yourusername/evorbrain/compare/v1.0.0...HEAD
-- [1.0.0]: https://github.com/yourusername/evorbrain/compare/v0.9.0-beta...v1.0.0
-- [0.9.0-beta]: https://github.com/yourusername/evorbrain/compare/v0.5.0-alpha...v0.9.0-beta
-- [0.5.0-alpha]: https://github.com/yourusername/evorbrain/releases/tag/v0.5.0-alpha
+- [Unreleased]: https://github.com/evorhard/evorbrain/compare/v1.0.0...HEAD
+- [1.0.0]: https://github.com/evorhard/evorbrain/compare/v0.9.0-beta...v1.0.0
+- [0.9.0-beta]: https://github.com/evorhard/evorbrain/compare/v0.5.0-alpha...v0.9.0-beta
+- [0.5.0-alpha]: https://github.com/evorhard/evorbrain/releases/tag/v0.5.0-alpha
 
 ---
 

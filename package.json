@@ -31,6 +31,8 @@
     "dev": "pnpm --filter \"@evorbrain/*\" run dev",
     "build": "pnpm --filter \"@evorbrain/*\" run build",
     "test": "pnpm --filter \"@evorbrain/*\" run test",
+    "test:ci": "pnpm --filter \"@evorbrain/*\" run test:ci",
+    "test:coverage": "pnpm --filter \"@evorbrain/*\" run test:coverage",
     "lint": "pnpm --filter \"@evorbrain/*\" run lint",
     "lint:fix": "pnpm --filter \"@evorbrain/*\" run lint -- --fix",
     "format": "pnpm --filter \"@evorbrain/*\" run format",
@@ -38,7 +40,9 @@
     "typecheck": "pnpm --filter \"@evorbrain/*\" run typecheck",
     "clean": "pnpm --filter \"@evorbrain/*\" run clean && rm -rf node_modules .pnpm-store",
     "prepare": "husky install",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "audit": "pnpm audit --audit-level=moderate",
+    "analyze": "pnpm --filter \"@evorbrain/*\" run analyze"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
