@@ -116,6 +116,11 @@ EvorBrain will be a powerful, customizable personal knowledge management system 
       <td>✅ Complete</td>
     </tr>
     <tr>
+      <td align="center">📁</td>
+      <td><strong>Workspace Packages</strong></td>
+      <td>✅ Complete</td>
+    </tr>
+    <tr>
       <td align="center">🦀</td>
       <td><strong>Tauri Integration</strong></td>
       <td>⏳ Next Up</td>
@@ -149,12 +154,12 @@ Once development is complete, installation will be available via:
 
 ### 🏗 Architecture
 
-EvorBrain uses a monorepo structure with:
-- **apps/desktop**: Tauri desktop application
-- **packages/core**: Core business logic
-- **packages/ui**: Shared UI components
-- **packages/plugin-api**: Plugin system APIs
-- **plugins/**: Built-in plugins
+EvorBrain uses a pnpm monorepo structure with:
+- **apps/desktop**: Tauri desktop application (React + TypeScript)
+- **packages/core**: Core business logic and data models
+- **packages/ui**: Shared UI components and design system
+- **packages/plugin-api**: Plugin system APIs and interfaces
+- **plugins/**: Built-in plugins (coming in Phase 4)
 
 ### 💻 Tech Stack
 
@@ -196,14 +201,17 @@ EvorBrain uses a monorepo structure with:
 git clone https://github.com/evorhard/evorbrain.git
 cd evorbrain
 
-# Install dependencies (when package.json is created)
+# Install dependencies
 pnpm install
 
-# Future development commands:
-# pnpm --filter desktop dev    # Run desktop app in dev mode
-# pnpm test                    # Run tests
-# pnpm lint                    # Lint code
-# pnpm build                   # Build all packages
+# Development commands:
+pnpm dev                       # Run all packages in dev mode
+pnpm --filter desktop dev      # Run desktop app only
+pnpm --filter desktop tauri:dev # Run desktop app with Tauri
+pnpm build                     # Build all packages
+pnpm test                      # Run all tests
+pnpm lint                      # Lint all packages
+pnpm typecheck                 # Type check all packages
 ```
 
 ### Plugin Development

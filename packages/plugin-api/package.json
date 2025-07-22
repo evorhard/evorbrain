@@ -1,0 +1,39 @@
+{
+  "name": "@evorbrain/plugin-api",
+  "version": "0.1.0",
+  "description": "Plugin API definitions and interfaces for EvorBrain",
+  "author": "Edvard Evorhard <edvard@evorhard.com>",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "docs": "typedoc --out docs src/index.ts",
+    "clean": "rm -rf dist node_modules .turbo docs"
+  },
+  "dependencies": {
+    "@evorbrain/core": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typedoc": "^0.25.4",
+    "vitest": "^1.0.4"
+  }
+}

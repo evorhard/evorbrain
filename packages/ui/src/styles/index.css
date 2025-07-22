@@ -1,0 +1,18 @@
+/* @evorbrain/ui - Global styles */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles */
+@layer base {
+  /* Override or extend Tailwind base styles here */
+}
+
+@layer components {
+  /* Custom component classes that work with Mantine */
+}
+
+@layer utilities {
+  /* Custom utility classes */
+}
