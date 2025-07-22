@@ -1,0 +1,88 @@
+name: Windows Development
+
+on:
+  push:
+    branches: [develop, feature/*]
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  windows-dev-check:
+    name: Windows Dev Check
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run quick checks
+        run: |
+          Write-Host "🔍 Running ESLint..." -ForegroundColor Blue
+          pnpm lint
+          
+          Write-Host "📘 Running TypeScript check..." -ForegroundColor Blue
+          pnpm typecheck
+          
+          Write-Host "🎨 Running Prettier check..." -ForegroundColor Blue
+          pnpm format:check
+
+      - name: Run frontend tests
+        run: |
+          Write-Host "🧪 Running frontend tests..." -ForegroundColor Blue
+          pnpm test:ci
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Check Rust code
+        run: |
+          Write-Host "🦀 Running Rust checks..." -ForegroundColor Blue
+          cd src-tauri
+          cargo check
+          cargo clippy -- -D warnings
+          cargo test
+
+      - name: Build application (dev mode)
+        run: |
+          Write-Host "🏗️ Building application..." -ForegroundColor Blue
+          pnpm build
+          
+      - name: Quick Tauri build test
+        run: |
+          Write-Host "📦 Testing Tauri build..." -ForegroundColor Blue
+          cd src-tauri
+          cargo build --release
+
+      - name: Summary
+        if: always()
+        run: |
+          Write-Host "`n📊 Windows Development Check Complete!" -ForegroundColor Green
+          Write-Host "================================" -ForegroundColor Gray
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ All checks passed!" -ForegroundColor Green
+          } else {
+            Write-Host "❌ Some checks failed. Please review the logs above." -ForegroundColor Red
+          }
