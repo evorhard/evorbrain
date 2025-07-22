@@ -114,7 +114,7 @@ jobs:
         run: pnpm build
 
       - name: Upload preview artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: preview-build-${{ github.event.pull_request.number }}
           path: apps/desktop/dist

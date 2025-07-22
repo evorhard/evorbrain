@@ -94,7 +94,7 @@ jobs:
           pnpm analyze
 
       - name: Upload bundle stats
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bundle-stats
           path: apps/desktop/bundle-stats.html
