@@ -58,8 +58,24 @@
       }
     ],
     "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: https:",
+        "font-src": "'self' data:",
+        "connect-src": "'self' ipc: tauri: http://localhost:*",
+        "media-src": "'self'",
+        "object-src": "'none'",
+        "frame-src": "'none'",
+        "worker-src": "'self' blob:",
+        "child-src": "'self'"
+      },
       "dangerousDisableAssetCspModification": false,
-      "freezePrototype": true
+      "freezePrototype": true,
+      "pattern": {
+        "use": "brownfield"
+      }
     },
     "macOSPrivateApi": true
   },
