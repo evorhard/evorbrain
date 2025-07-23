@@ -42,6 +42,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - IPC communication testing
   - Hot reload functionality
   - App information display
+- React frontend with Vite:
+  - React 18 with TypeScript in strict mode
+  - Vite build tool configuration
+  - Hot module replacement (HMR) setup
+  - Path aliases and TypeScript references
+- Mantine UI v7 integration:
+  - Core components and hooks
+  - Notifications system
+  - Date picker components
+  - Forms with validation
+  - Theme provider with auto color scheme
+- Tailwind CSS configuration:
+  - Integration with Mantine components
+  - Custom utility classes
+  - Dark mode support compatible with Mantine
+  - Preflight disabled to prevent conflicts
 
 ### Changed
 - N/A

@@ -43,9 +43,14 @@
     "@evorbrain/core": "workspace:*",
     "@evorbrain/types": "workspace:*",
     "@evorbrain/ui": "workspace:*",
+    "@mantine/core": "7",
+    "@mantine/dates": "7",
+    "@mantine/form": "7",
+    "@mantine/hooks": "7",
+    "@mantine/notifications": "7",
     "@tauri-apps/api": "^2.0.0-alpha.11",
+    "dayjs": "^1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {

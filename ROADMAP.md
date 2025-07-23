@@ -20,8 +20,9 @@ Establish project structure and core architecture
 - [x] Monorepo setup with pnpm workspaces
 - [x] Tauri application scaffold
 - [x] Basic Tauri window and IPC communication
-- [ ] Basic React + TypeScript frontend (in progress)
-- [ ] SQLite integration with Rust backend
+- [x] Basic React + TypeScript frontend (completed)
+- [x] Mantine UI and Tailwind CSS integration
+- [ ] SQLite integration with Rust backend (next priority)
 - [ ] File system operations for markdown storage
 
 ### Deliverables

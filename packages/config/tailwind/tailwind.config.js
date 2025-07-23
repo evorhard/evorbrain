@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [],
-  darkMode: 'class',
+  darkMode: ['class', '[data-mantine-color-scheme="dark"]'],
   theme: {
     extend: {
       colors: {
@@ -19,4 +19,8 @@ module.exports = {
     },
   },
   plugins: [],
+  // Ensure Tailwind utilities don't conflict with Mantine styles
+  corePlugins: {
+    preflight: false, // Disable Tailwind's base reset since Mantine has its own
+  },
 };
