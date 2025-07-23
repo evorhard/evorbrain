@@ -34,19 +34,19 @@ jobs:
           body: |
             ## What's Changed
             ${{ steps.changelog.outputs.changelog }}
-            
+
             ## Installation
-            
+
             Download the appropriate installer for your platform below.
-            
+
             ### Windows
             - `.msi` installer: Recommended for most users
             - `.exe` installer: Alternative installer
-            
+
             ### macOS
             - `.dmg`: Disk image for drag-and-drop installation
             - `.app.tar.gz`: Compressed app bundle
-            
+
             ### Linux
             - `.AppImage`: Universal Linux package (recommended)
             - `.deb`: For Debian/Ubuntu-based distributions
@@ -108,7 +108,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './apps/desktop/src-tauri -> target'
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0

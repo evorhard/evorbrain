@@ -37,10 +37,10 @@ jobs:
         run: |
           Write-Host "🔍 Running ESLint..." -ForegroundColor Blue
           pnpm lint
-          
+
           Write-Host "📘 Running TypeScript check..." -ForegroundColor Blue
           pnpm typecheck
-          
+
           Write-Host "🎨 Running Prettier check..." -ForegroundColor Blue
           pnpm format:check
 
@@ -55,12 +55,12 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './apps/desktop/src-tauri -> target'
 
       - name: Check Rust code
         run: |
           Write-Host "🦀 Running Rust checks..." -ForegroundColor Blue
-          cd src-tauri
+          cd apps/desktop/src-tauri
           cargo check
           cargo clippy -- -D warnings
           cargo test
@@ -69,11 +69,11 @@ jobs:
         run: |
           Write-Host "🏗️ Building application..." -ForegroundColor Blue
           pnpm build
-          
+
       - name: Quick Tauri build test
         run: |
           Write-Host "📦 Testing Tauri build..." -ForegroundColor Blue
-          cd src-tauri
+          cd apps/desktop/src-tauri
           cargo build --release
 
       - name: Summary

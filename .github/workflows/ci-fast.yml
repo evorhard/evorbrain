@@ -48,7 +48,7 @@ jobs:
     needs: quick-check-windows
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]  # Windows already tested above
+        os: [ubuntu-latest, macos-latest] # Windows already tested above
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -115,16 +115,16 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './apps/desktop/src-tauri -> target'
 
       - name: Run Rust tests
         run: |
-          cd src-tauri
+          cd apps/desktop/src-tauri
           cargo test --all-features
 
       - name: Run clippy
         run: |
-          cd src-tauri
+          cd apps/desktop/src-tauri
           cargo clippy -- -D warnings
 
   # Only build if all tests pass
@@ -179,7 +179,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './apps/desktop/src-tauri -> target'
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
@@ -193,6 +193,6 @@ jobs:
         with:
           name: evorbrain-${{ matrix.target }}
           path: |
-            src-tauri/target/release/bundle/
-            src-tauri/target/${{ matrix.target }}/release/bundle/
+            apps/desktop/src-tauri/target/release/bundle/
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/
           retention-days: 7
