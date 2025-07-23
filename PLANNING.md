@@ -333,6 +333,12 @@ interface MigrationPipeline {
 **Decision**: Implement FSD methodology  
 **Consequences**: Clear structure, learning curve  
 
+### ADR-005: Mantine UI + Tailwind CSS
+**Status**: Accepted  
+**Context**: Need consistent UI components and styling flexibility  
+**Decision**: Use Mantine v7 for components, Tailwind for utilities  
+**Consequences**: Rich component library, flexible styling, slightly larger bundle  
+
 ## Risk Analysis
 
 ### Technical Risks

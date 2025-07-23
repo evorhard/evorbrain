@@ -80,23 +80,23 @@ This document provides a granular breakdown of development tasks organized by ph
 
 ### Frontend Foundation
 
-- [ ] **TASK-014**: Initialize React application with Vite - 🟢
-  - [ ] Create Vite + React + TypeScript template
-  - [ ] Configure Vite for Tauri integration
-  - [ ] Set up development server configuration
-- [ ] **TASK-015**: Configure TypeScript strict mode - 🟢
-  - [ ] Enable strict TypeScript configuration
-  - [ ] Configure path aliases and imports
-  - [ ] Set up type checking scripts
-- [ ] **TASK-016**: Install and configure Mantine UI - 🟡
-  - [ ] Install Mantine core and hooks packages
-  - [ ] Set up MantineProvider with theme
-  - [ ] Configure Mantine components and styles
-  - [ ] Test basic Mantine component rendering
-- [ ] **TASK-017**: Set up Tailwind CSS with Mantine - 🟡
-  - [ ] Install and configure Tailwind CSS
-  - [ ] Configure Tailwind to work with Mantine
-  - [ ] Set up utility classes and custom styles
+- [x] **TASK-014**: Initialize React application with Vite - 🟢
+  - [x] Create Vite + React + TypeScript template
+  - [x] Configure Vite for Tauri integration
+  - [x] Set up development server configuration
+- [x] **TASK-015**: Configure TypeScript strict mode - 🟢
+  - [x] Enable strict TypeScript configuration
+  - [x] Configure path aliases and imports
+  - [x] Set up type checking scripts
+- [x] **TASK-016**: Install and configure Mantine UI - 🟡
+  - [x] Install Mantine core and hooks packages
+  - [x] Set up MantineProvider with theme
+  - [x] Configure Mantine components and styles
+  - [x] Test basic Mantine component rendering
+- [x] **TASK-017**: Set up Tailwind CSS with Mantine - 🟡
+  - [x] Install and configure Tailwind CSS
+  - [x] Configure Tailwind to work with Mantine
+  - [x] Set up utility classes and custom styles
   - [ ] Create design system documentation
 - [ ] **TASK-018**: Create base layout components - 🟡
   - [ ] Design and implement AppShell layout
@@ -108,9 +108,9 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Set up route definitions and lazy loading
   - [ ] Create protected route components
   - [ ] Implement navigation state management
-- [ ] **TASK-020**: Set up development hot reload - 🟢
-  - [ ] Configure Vite HMR for React components
-  - [ ] Test hot reload with Tauri integration
+- [x] **TASK-020**: Set up development hot reload - 🟢
+  - [x] Configure Vite HMR for React components
+  - [x] Test hot reload with Tauri integration
   - [ ] Set up error boundary for development
 
 ### Backend Foundation
