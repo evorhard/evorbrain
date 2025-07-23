@@ -22,7 +22,7 @@ export function App() {
 
     // Test window events
     const unlistenPromise = appWindow.listen('tauri://resize', () => {
-      console.log('Window was resized!');
+      // Window resize event handler
     });
 
     return () => {
@@ -35,7 +35,7 @@ export function App() {
       const response = await invoke<string>('greet', { name: 'User' });
       setGreeting(response);
     } catch (error) {
-      console.error('Error calling greet command:', error);
+      setGreeting('Error: Failed to call greet command');
     }
   };
 
