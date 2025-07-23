@@ -26,6 +26,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Code coverage reporting
   - Bundle size analysis
   - Lighthouse performance testing
+- Tauri permission configuration:
+  - File system access permissions with security scopes
+  - Dialog and notification permissions
+  - Window control permissions
+  - Content Security Policy (CSP) configuration
+- Development certificate generation and trust scripts
+- Comprehensive build scripts:
+  - Platform-specific builds (Windows, macOS, Linux)
+  - Development and production build modes
+  - Build configuration management
+  - Rust tooling integration
+- Basic Tauri window implementation:
+  - Window controls (minimize, maximize, center)
+  - IPC communication testing
+  - Hot reload functionality
+  - App information display
 
 ### Changed
 - N/A

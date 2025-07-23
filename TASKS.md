@@ -61,22 +61,22 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Initialize Tauri app in apps/desktop
   - [x] Configure tauri.conf.json with app metadata
   - [x] Set up src-tauri directory structure
-- [ ] **TASK-010**: Configure Tauri permissions - 🟢
-  - [ ] Define required filesystem permissions
-  - [ ] Configure IPC command allowlist
-  - [ ] Set up security scope for file access
-- [ ] **TASK-011**: Set up development certificates - 🟢
-  - [ ] Generate development certificates for HTTPS
-  - [ ] Configure certificate trust for local development
-- [ ] **TASK-012**: Configure build scripts - 🟡
-  - [ ] Set up development build configuration
-  - [ ] Configure production build optimization
-  - [ ] Add cross-platform build scripts
-  - [ ] Set up asset bundling
-- [ ] **TASK-013**: Test basic window creation - 🟢
-  - [ ] Create minimal Tauri window
-  - [ ] Test window controls and events
-  - [ ] Verify hot reload functionality
+- [x] **TASK-010**: Configure Tauri permissions - 🟢
+  - [x] Define required filesystem permissions
+  - [x] Configure IPC command allowlist
+  - [x] Set up security scope for file access
+- [x] **TASK-011**: Set up development certificates - 🟢
+  - [x] Generate development certificates for HTTPS
+  - [x] Configure certificate trust for local development
+- [x] **TASK-012**: Configure build scripts - 🟡
+  - [x] Set up development build configuration
+  - [x] Configure production build optimization
+  - [x] Add cross-platform build scripts
+  - [x] Set up asset bundling
+- [x] **TASK-013**: Test basic window creation - 🟢
+  - [x] Create minimal Tauri window
+  - [x] Test window controls and events
+  - [x] Verify hot reload functionality
 
 ### Frontend Foundation
 

@@ -17,9 +17,10 @@ Establish project structure and core architecture
 
 ### Milestones
 - [x] Project initialization and documentation
-- [ ] Monorepo setup with pnpm workspaces
-- [ ] Tauri application scaffold
-- [ ] Basic React + TypeScript frontend
+- [x] Monorepo setup with pnpm workspaces
+- [x] Tauri application scaffold
+- [x] Basic Tauri window and IPC communication
+- [ ] Basic React + TypeScript frontend (in progress)
 - [ ] SQLite integration with Rust backend
 - [ ] File system operations for markdown storage
 
