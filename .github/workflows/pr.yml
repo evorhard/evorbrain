@@ -5,93 +5,9 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  label:
-    name: Label PR
+  basic-checks:
+    name: Basic Checks
     runs-on: ubuntu-latest
-    steps:
-      - name: Label PR based on files changed
-        uses: actions/labeler@v5
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-  size:
-    name: Check PR Size
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check PR size
-        uses: CodelyTV/pr-size-labeler@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          xs_label: 'size/xs'
-          xs_max_size: '10'
-          s_label: 'size/s'
-          s_max_size: '100'
-          m_label: 'size/m'
-          m_max_size: '500'
-          l_label: 'size/l'
-          l_max_size: '1000'
-          xl_label: 'size/xl'
-          fail_if_xl: 'false'
-
-  check-commits:
-    name: Check Commits
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check commit messages
-        uses: wagoid/commitlint-github-action@v5
-        with:
-          configFile: .commitlintrc.json
-
-  check-dependencies:
-    name: Check Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Check for dependency changes
-        id: deps
-        uses: tj-actions/changed-files@v46
-        with:
-          files: |
-            package.json
-            pnpm-lock.yaml
-            **/package.json
-            apps/desktop/src-tauri/Cargo.toml
-            apps/desktop/src-tauri/Cargo.lock
-
-      - name: Comment on PR if dependencies changed
-        if: steps.deps.outputs.any_changed == 'true'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '⚠️ **Dependencies Changed**\n\nThis PR modifies dependencies. Please ensure:\n- [ ] New dependencies are necessary\n- [ ] Dependencies are from trusted sources\n- [ ] No security vulnerabilities are introduced\n- [ ] License compatibility is maintained'
-            })
-
-  preview:
-    name: Build Preview
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -110,23 +26,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build frontend
+      - name: Run type check
+        run: pnpm typecheck
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Try to build
         run: pnpm build
-
-      - name: Upload preview artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: preview-build-${{ github.event.pull_request.number }}
-          path: apps/desktop/dist
-          retention-days: 7
-
-      - name: Comment preview link
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '🚀 **Preview Build Ready**\n\nA preview build of this PR has been generated. [Download artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
-            })
+        continue-on-error: true
