@@ -222,6 +222,7 @@ Cargo.lock
 
 # Development certificates
 dev-certs/
+certs/
 *.localhost.*
 
 # AI-generated content (temporary)
