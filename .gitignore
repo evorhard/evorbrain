@@ -230,6 +230,7 @@ dev-certs/
 
 # Claude related
 CLAUDE.md
+PROMPTS.md
 
 # Local configuration overrides
 local.config.js
