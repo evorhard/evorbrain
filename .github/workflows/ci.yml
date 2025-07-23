@@ -72,12 +72,14 @@ jobs:
         run: pnpm test:ci
 
       - name: Upload coverage reports
-        if: ${{ secrets.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
+        if: env.CODECOV_TOKEN != ''
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: frontend
           name: frontend-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   test-rust:
     name: Test Rust
