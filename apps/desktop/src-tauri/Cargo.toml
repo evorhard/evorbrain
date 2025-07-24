@@ -23,6 +23,12 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.6", features = ["v4", "serde"] }
 log = "0.4"
 env_logger = "0.10"
+notify = "6.1"
+async-trait = "0.1"
+regex = "1.10"
+lazy_static = "1.4"
+futures = "0.3"
+tempfile = "3.8"
 
 [features]
 # This feature is used for production builds or when `devPath` points to the filesystem

@@ -28,7 +28,7 @@ Establish project structure and core architecture
 - [x] React Router v7 integration with lazy loading
 - [x] SQLite integration with Rust backend
 - [x] SQLite FTS5 full-text search implementation
-- [ ] File system operations for markdown storage
+- [x] File system operations for markdown storage
 
 ### Deliverables
 

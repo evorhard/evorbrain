@@ -6,6 +6,7 @@ use tauri::Manager;
 mod commands;
 mod database;
 mod errors;
+mod filesystem;
 mod models;
 mod utils;
 

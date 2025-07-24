@@ -220,7 +220,8 @@ pub fn search_entities(
     params.push(Box::new(offset));
     
     let mut stmt = conn.prepare(&sql)?;
-    let results = stmt.query_map(params.as_slice(), |row| {
+    let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+    let results = stmt.query_map(&param_refs[..], |row| {
         Ok(SearchResult {
             id: row.get(0)?,
             entity_type: row.get(1)?,
