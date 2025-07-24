@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-
 import { Stack, NavLink, TextInput, ScrollArea, Box, Divider, Text } from '@mantine/core';
 import {
   IconSearch,
@@ -51,22 +50,30 @@ export function Sidebar() {
     {
       label: 'Life Areas',
       icon: <IconFolder size={20} />,
-      onClick: () => {/* TODO: Implement areas list view */},
+      onClick: () => {
+        /* TODO: Implement areas list view */
+      },
     },
     {
       label: 'Goals',
       icon: <IconTarget size={20} />,
-      onClick: () => {/* TODO: Implement goals list view */},
+      onClick: () => {
+        /* TODO: Implement goals list view */
+      },
     },
     {
       label: 'Projects',
       icon: <IconFolder size={20} />,
-      onClick: () => {/* TODO: Implement projects list view */},
+      onClick: () => {
+        /* TODO: Implement projects list view */
+      },
     },
     {
       label: 'Tasks',
       icon: <IconCheckbox size={20} />,
-      onClick: () => {/* TODO: Implement tasks list view */},
+      onClick: () => {
+        /* TODO: Implement tasks list view */
+      },
     },
   ];
 
@@ -74,7 +81,9 @@ export function Sidebar() {
     {
       label: 'Command Palette',
       icon: <IconCommand size={20} />,
-      onClick: () => {/* TODO: Open command palette */},
+      onClick: () => {
+        /* TODO: Open command palette */
+      },
     },
     {
       label: 'Settings',
@@ -121,7 +130,9 @@ export function Sidebar() {
                   label={item.label}
                   leftSection={item.icon}
                   onClick={() => {
-                    if (item.path) {void navigate(item.path);}
+                    if (item.path) {
+                      void navigate(item.path);
+                    }
                     item.onClick?.();
                   }}
                 />
@@ -143,7 +154,9 @@ export function Sidebar() {
                   label={item.label}
                   leftSection={item.icon}
                   onClick={() => {
-                    if (item.path) {void navigate(item.path);}
+                    if (item.path) {
+                      void navigate(item.path);
+                    }
                     item.onClick?.();
                   }}
                 />
@@ -164,7 +177,9 @@ export function Sidebar() {
             label={item.label}
             leftSection={item.icon}
             onClick={() => {
-              if (item.path) {void navigate(item.path);}
+              if (item.path) {
+                void navigate(item.path);
+              }
               item.onClick?.();
             }}
           />

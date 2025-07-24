@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requireAuth = false }: ProtectedRouteProps) {
   const location = useLocation();
-  
+
   // TODO: Replace with actual auth state from store
   const isAuthenticated = true;
   const isLoading = false;

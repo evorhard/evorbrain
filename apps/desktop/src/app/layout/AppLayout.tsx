@@ -27,12 +27,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <AppShell.Header className="border-b border-gray-200 dark:border-gray-800">
         <Group h="100%" justify="space-between" px="md">
           <Group>
-            <Burger
-              hiddenFrom="sm"
-              opened={opened}
-              size="sm"
-              onClick={toggle}
-            />
+            <Burger hiddenFrom="sm" opened={opened} size="sm" onClick={toggle} />
             <Group gap="xs">
               <IconBrain className="text-teal-600 dark:text-teal-400" size={28} />
               <Text className="select-none" fw={700} size="xl">
@@ -40,18 +35,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               </Text>
             </Group>
           </Group>
-          
+
           <ActionIcon
             aria-label="Toggle color scheme"
             size="lg"
             variant="default"
             onClick={() => toggleColorScheme()}
           >
-            {colorScheme === 'dark' ? (
-              <IconSun size={18} />
-            ) : (
-              <IconMoon size={18} />
-            )}
+            {colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
           </ActionIcon>
         </Group>
       </AppShell.Header>
@@ -60,9 +51,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <Sidebar />
       </AppShell.Navbar>
 
-      <AppShell.Main className="bg-gray-50 dark:bg-gray-900">
-        {children}
-      </AppShell.Main>
+      <AppShell.Main className="bg-gray-50 dark:bg-gray-900">{children}</AppShell.Main>
     </AppShell>
   );
 }

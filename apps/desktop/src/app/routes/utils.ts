@@ -1,10 +1,7 @@
 import { ROUTES } from './routes';
 
 // Helper to build entity routes with IDs
-export function buildEntityRoute(
-  type: 'area' | 'goal' | 'project' | 'task',
-  id: string
-): string {
+export function buildEntityRoute(type: 'area' | 'goal' | 'project' | 'task', id: string): string {
   const routeMap = {
     area: ROUTES.AREA,
     goal: ROUTES.GOAL,
@@ -23,10 +20,14 @@ export function buildSearchRoute(query: string): string {
 // Check if a path is active (for navigation highlighting)
 export function isRouteActive(currentPath: string, targetPath: string): boolean {
   // Exact match
-  if (currentPath === targetPath) {return true;}
-  
+  if (currentPath === targetPath) {
+    return true;
+  }
+
   // Check if current path starts with target (for nested routes)
-  if (targetPath !== '/' && currentPath.startsWith(targetPath)) {return true;}
-  
+  if (targetPath !== '/' && currentPath.startsWith(targetPath)) {
+    return true;
+  }
+
   return false;
 }

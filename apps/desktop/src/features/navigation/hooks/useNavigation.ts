@@ -14,7 +14,7 @@ export function useNavigation() {
       const route = buildEntityRoute(type, id);
       void navigate(route);
     },
-    [navigate]
+    [navigate],
   );
 
   const navigateToSearch = useCallback(
@@ -22,7 +22,7 @@ export function useNavigation() {
       const route = buildSearchRoute(query);
       void navigate(route);
     },
-    [navigate]
+    [navigate],
   );
 
   const navigateToDaily = useCallback(() => {
@@ -52,7 +52,7 @@ export function useNavigation() {
     isCalendar: location.pathname === ROUTES.CALENDAR_VIEW,
     isHierarchy: location.pathname === ROUTES.HIERARCHY_VIEW,
     isSettings: location.pathname === ROUTES.SETTINGS,
-    
+
     // Navigation functions
     navigate,
     navigateToEntity,

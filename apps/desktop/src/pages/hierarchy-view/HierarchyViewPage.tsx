@@ -74,11 +74,7 @@ export default function HierarchyViewPage() {
         </div>
 
         <Card withBorder padding="lg" radius="md" shadow="sm">
-          <Tree
-            expandOnClick
-            data={data}
-            levelOffset={23}
-          />
+          <Tree expandOnClick data={data} levelOffset={23} />
         </Card>
 
         <Card withBorder bg="blue.0" padding="sm" radius="md" shadow="xs">

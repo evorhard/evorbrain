@@ -1,4 +1,14 @@
-import { Container, Title, Text, Card, Stack, Tabs, Switch, Select , useMantineColorScheme } from '@mantine/core';
+import {
+  Container,
+  Title,
+  Text,
+  Card,
+  Stack,
+  Tabs,
+  Switch,
+  Select,
+  useMantineColorScheme,
+} from '@mantine/core';
 import { IconPalette, IconSettings, IconDatabase, IconPlug } from '@tabler/icons-react';
 
 export default function SettingsPage() {
@@ -41,7 +51,7 @@ export default function SettingsPage() {
                     size="md"
                     onChange={() => toggleColorScheme()}
                   />
-                  
+
                   <Select
                     data={[
                       { value: 'small', label: 'Small' },
@@ -67,7 +77,7 @@ export default function SettingsPage() {
                     label="Auto-save"
                     size="md"
                   />
-                  
+
                   <Select
                     data={[
                       { value: 'daily', label: 'Daily View' },
@@ -88,9 +98,13 @@ export default function SettingsPage() {
               <Card withBorder padding="lg" radius="md" shadow="sm">
                 <Stack gap="md">
                   <Text fw={500}>Data Location</Text>
-                  <Text c="dimmed" size="sm">~/Documents/EvorBrain</Text>
-                  
-                  <Text fw={500} mt="md">Backup Settings</Text>
+                  <Text c="dimmed" size="sm">
+                    ~/Documents/EvorBrain
+                  </Text>
+
+                  <Text fw={500} mt="md">
+                    Backup Settings
+                  </Text>
                   <Switch
                     defaultChecked
                     description="Create daily backups of your data"

@@ -13,9 +13,7 @@ export function Breadcrumbs() {
   const location = useLocation();
 
   const getBreadcrumbs = (): BreadcrumbItem[] => {
-    const items: BreadcrumbItem[] = [
-      { label: 'Home', path: ROUTES.HOME },
-    ];
+    const items: BreadcrumbItem[] = [{ label: 'Home', path: ROUTES.HOME }];
 
     // Parse current path to build breadcrumbs
     const path = location.pathname;
@@ -53,7 +51,7 @@ export function Breadcrumbs() {
     <MantineBreadcrumbs separator="→" separatorMargin="md">
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
-        
+
         if (isLast || !item.path) {
           return (
             <Text key={index} c="dimmed" size="sm">
