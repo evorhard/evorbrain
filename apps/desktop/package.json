@@ -48,6 +48,7 @@
     "@mantine/form": "7",
     "@mantine/hooks": "7",
     "@mantine/notifications": "7",
+    "@tabler/icons-react": "^3.34.1",
     "@tauri-apps/api": "^2.0.0-alpha.11",
     "dayjs": "^1",
     "react": "^18.2.0",
