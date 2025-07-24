@@ -339,6 +339,12 @@ interface MigrationPipeline {
 **Decision**: Use Mantine v7 for components, Tailwind for utilities  
 **Consequences**: Rich component library, flexible styling, slightly larger bundle  
 
+### ADR-006: React Router v7 for Navigation
+**Status**: Accepted  
+**Context**: Need client-side routing for desktop application  
+**Decision**: Use React Router v7 with lazy loading and type safety  
+**Consequences**: Modern routing patterns, code splitting support, future compatibility  
+
 ## Risk Analysis
 
 ### Technical Risks

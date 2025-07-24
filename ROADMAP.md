@@ -22,6 +22,7 @@ Establish project structure and core architecture
 - [x] Basic Tauri window and IPC communication
 - [x] Basic React + TypeScript frontend (completed)
 - [x] Mantine UI and Tailwind CSS integration
+- [x] React Router v7 integration with lazy loading
 - 🚧 SQLite integration with Rust backend (in progress)
 - [ ] File system operations for markdown storage
 

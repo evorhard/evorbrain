@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+
 import { Stack, NavLink, TextInput, ScrollArea, Box, Divider, Text } from '@mantine/core';
 import {
   IconSearch,
@@ -10,37 +11,39 @@ import {
   IconCheckbox,
   IconCommand,
   IconSettings,
+  IconCalendarEvent,
 } from '@tabler/icons-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+import { ROUTES } from '../../app/routes/routes';
 
 interface NavItem {
   label: string;
   icon: React.ReactNode;
+  path?: string;
   onClick?: () => void;
-  active?: boolean;
 }
 
 export function Sidebar() {
   const [searchValue, setSearchValue] = useState('');
-  const [activeView, setActiveView] = useState('daily');
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const mainNavItems: NavItem[] = [
     {
       label: 'Daily View',
-      icon: <IconCalendar size={20} />,
-      active: activeView === 'daily',
-      onClick: () => setActiveView('daily'),
+      icon: <IconCalendarEvent size={20} />,
+      path: ROUTES.DAILY_VIEW,
     },
     {
       label: 'Calendar',
       icon: <IconCalendar size={20} />,
-      active: activeView === 'calendar',
-      onClick: () => setActiveView('calendar'),
+      path: ROUTES.CALENDAR_VIEW,
     },
     {
       label: 'Hierarchy',
       icon: <IconHierarchy3 size={20} />,
-      active: activeView === 'hierarchy',
-      onClick: () => setActiveView('hierarchy'),
+      path: ROUTES.HIERARCHY_VIEW,
     },
   ];
 
@@ -48,22 +51,22 @@ export function Sidebar() {
     {
       label: 'Life Areas',
       icon: <IconFolder size={20} />,
-      onClick: () => setActiveView('areas'),
+      onClick: () => {/* TODO: Implement areas list view */},
     },
     {
       label: 'Goals',
       icon: <IconTarget size={20} />,
-      onClick: () => setActiveView('goals'),
+      onClick: () => {/* TODO: Implement goals list view */},
     },
     {
       label: 'Projects',
       icon: <IconFolder size={20} />,
-      onClick: () => setActiveView('projects'),
+      onClick: () => {/* TODO: Implement projects list view */},
     },
     {
       label: 'Tasks',
       icon: <IconCheckbox size={20} />,
-      onClick: () => setActiveView('tasks'),
+      onClick: () => {/* TODO: Implement tasks list view */},
     },
   ];
 
@@ -76,9 +79,15 @@ export function Sidebar() {
     {
       label: 'Settings',
       icon: <IconSettings size={20} />,
-      onClick: () => {/* TODO: Open settings */},
+      path: ROUTES.SETTINGS,
     },
   ];
+
+  const handleSearch = () => {
+    if (searchValue.trim()) {
+      void navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(searchValue)}`);
+    }
+  };
 
   return (
     <Stack gap={0} h="100%">
@@ -89,6 +98,11 @@ export function Sidebar() {
           placeholder="Search..."
           value={searchValue}
           onChange={(event) => setSearchValue(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              handleSearch();
+            }
+          }}
         />
       </Box>
 
@@ -102,11 +116,14 @@ export function Sidebar() {
               {mainNavItems.map((item) => (
                 <NavLink
                   key={item.label}
-                  active={item.active}
+                  active={item.path === location.pathname}
                   className="rounded-md"
                   label={item.label}
                   leftSection={item.icon}
-                  onClick={item.onClick}
+                  onClick={() => {
+                    if (item.path) {void navigate(item.path);}
+                    item.onClick?.();
+                  }}
                 />
               ))}
             </Stack>
@@ -125,7 +142,10 @@ export function Sidebar() {
                   className="rounded-md"
                   label={item.label}
                   leftSection={item.icon}
-                  onClick={item.onClick}
+                  onClick={() => {
+                    if (item.path) {void navigate(item.path);}
+                    item.onClick?.();
+                  }}
                 />
               ))}
             </Stack>
@@ -139,10 +159,14 @@ export function Sidebar() {
         {bottomItems.map((item) => (
           <NavLink
             key={item.label}
+            active={item.path === location.pathname}
             className="rounded-md"
             label={item.label}
             leftSection={item.icon}
-            onClick={item.onClick}
+            onClick={() => {
+              if (item.path) {void navigate(item.path);}
+              item.onClick?.();
+            }}
           />
         ))}
       </Stack>

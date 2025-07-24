@@ -128,7 +128,7 @@ EvorBrain will be a powerful, customizable personal knowledge management system 
     <tr>
       <td align="center">⚛️</td>
       <td><strong>React Foundation</strong></td>
-      <td>⏳ Planned</td>
+      <td>🚧 In Progress</td>
     </tr>
   </table>
 </div>

@@ -69,6 +69,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added main content area with proper spacing and responsive design
   - Integrated Tabler Icons for consistent UI iconography
   - Applied Feature-Sliced Design (FSD) architecture for component organization
+- Routing implementation:
+  - Installed and configured React Router v7 with TypeScript support
+  - Created route definitions with lazy loading for all main views
+  - Implemented protected route component for future authentication
+  - Built navigation state management with useNavigation hook
+  - Created breadcrumb component for navigation visualization
+  - Integrated router with existing sidebar navigation
+  - Implemented following pages with basic UI:
+    - Daily View page with task tabs (Today, Upcoming, Completed)
+    - Calendar View page (placeholder for Phase 3)
+    - Hierarchy View page with tree visualization
+    - Settings page with appearance, general, data, and plugin tabs
+  - Added route utilities for entity navigation and search
+  - Updated AppLayout to work with React Router outlet pattern
 
 ### Changed
 - N/A
