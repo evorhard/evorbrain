@@ -38,6 +38,8 @@ fn main() {
             // Add command handlers here
             commands::greet,
             commands::test_database,
+            commands::search,
+            commands::test_fts,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

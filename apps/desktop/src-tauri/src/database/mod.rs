@@ -1,6 +1,8 @@
 use rusqlite::{Connection, Result};
 use std::path::Path;
 
+pub mod search;
+
 pub fn init_database(db_path: &Path) -> Result<()> {
     let conn = Connection::open(db_path)?;
     
@@ -67,18 +69,8 @@ pub fn init_database(db_path: &Path) -> Result<()> {
         [],
     )?;
     
-    // Create search index table (FTS5 will be added later)
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS search_index (
-            entity_id TEXT NOT NULL,
-            entity_type TEXT NOT NULL,
-            title TEXT NOT NULL,
-            description TEXT,
-            content TEXT,
-            PRIMARY KEY (entity_id, entity_type)
-        )",
-        [],
-    )?;
+    // Initialize FTS5 search tables
+    search::init_fts5(&conn)?;
     
     Ok(())
 }

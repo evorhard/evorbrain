@@ -88,6 +88,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Settings page with appearance, general, data, and plugin tabs
   - Added route utilities for entity navigation and search
   - Updated AppLayout to work with React Router outlet pattern
+- Data model and search infrastructure:
+  - Comprehensive data model schema documentation
+  - SQLite FTS5 (Full-Text Search) implementation
+  - Entity storage schema with hierarchical relationships
+  - Search indexing and query functionality
+  - Test commands for database and FTS5 verification
 
 ### Changed
 

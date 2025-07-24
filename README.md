@@ -173,6 +173,7 @@ EvorBrain uses a pnpm monorepo structure with:
 - **packages/ui**: Shared UI components and design system
 - **packages/plugin-api**: Plugin system APIs and interfaces
 - **plugins/**: Built-in plugins (coming in Phase 4)
+- **docs/**: Technical documentation including [data model schema](docs/data-model.md)
 
 ### 💻 Tech Stack
 

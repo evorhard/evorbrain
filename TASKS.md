@@ -125,11 +125,11 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Create database connection management
   - [x] Set up database initialization and migrations
   - [x] Test basic database operations
-- [ ] **TASK-023**: Implement FTS5 extension setup - 🟡
-  - [ ] Enable FTS5 extension in SQLite
-  - [ ] Create FTS5 tables for content indexing
-  - [ ] Implement search indexing functions
-  - [ ] Test full-text search functionality
+- [x] **TASK-023**: Implement FTS5 extension setup - 🟡
+  - [x] Enable FTS5 extension in SQLite
+  - [x] Create FTS5 tables for content indexing
+  - [x] Implement search indexing functions
+  - [x] Test full-text search functionality
 - [ ] **TASK-024**: Create file system abstraction layer - 🟠
   - [ ] Design file system interface traits
   - [ ] Implement file read/write operations

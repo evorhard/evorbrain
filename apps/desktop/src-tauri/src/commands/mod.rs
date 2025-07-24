@@ -2,6 +2,7 @@
 
 use rusqlite::Connection;
 use tauri::Manager;
+use crate::database::search::{search_entities, test_fts5, SearchResult};
 
 #[tauri::command]
 pub fn greet(name: &str) -> String {
@@ -68,4 +69,45 @@ pub fn test_database(app_handle: tauri::AppHandle) -> Result<String, String> {
         - Verified {} tables exist",
         db_path, test_id, area.1, area.2.unwrap_or_default(), table_count
     ))
+}
+
+#[tauri::command]
+pub fn search(
+    app_handle: tauri::AppHandle,
+    query: String,
+    entity_type: Option<String>,
+    parent_id: Option<String>,
+    limit: Option<usize>,
+    offset: Option<usize>,
+) -> Result<Vec<SearchResult>, String> {
+    let app_dir = app_handle.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app directory: {}", e))?;
+    let db_path = app_dir.join("evorbrain.db");
+    
+    let conn = Connection::open(&db_path)
+        .map_err(|e| format!("Failed to open database: {}", e))?;
+    
+    let results = search_entities(
+        &conn,
+        &query,
+        entity_type.as_deref(),
+        parent_id.as_deref(),
+        limit.unwrap_or(20),
+        offset.unwrap_or(0),
+    ).map_err(|e| format!("Search failed: {}", e))?;
+    
+    Ok(results)
+}
+
+#[tauri::command]
+pub fn test_fts(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let app_dir = app_handle.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app directory: {}", e))?;
+    let db_path = app_dir.join("evorbrain.db");
+    
+    let conn = Connection::open(&db_path)
+        .map_err(|e| format!("Failed to open database: {}", e))?;
+    
+    test_fts5(&conn)
+        .map_err(|e| format!("FTS5 test failed: {}", e))
 }

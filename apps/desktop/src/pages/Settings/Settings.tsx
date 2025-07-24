@@ -8,6 +8,7 @@ import {
   IconPlug,
   IconCheck,
   IconX,
+  IconSearch,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -15,6 +16,9 @@ function Settings() {
   const [databaseTestResult, setDatabaseTestResult] = useState<string | null>(null);
   const [isTestingDatabase, setIsTestingDatabase] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
+  const [ftsTestResult, setFtsTestResult] = useState<string | null>(null);
+  const [isTestingFts, setIsTestingFts] = useState(false);
+  const [ftsTestError, setFtsTestError] = useState<string | null>(null);
 
   const testDatabase = async () => {
     setIsTestingDatabase(true);
@@ -28,6 +32,21 @@ function Settings() {
       setTestError(error as string);
     } finally {
       setIsTestingDatabase(false);
+    }
+  };
+
+  const testFts = async () => {
+    setIsTestingFts(true);
+    setFtsTestError(null);
+    setFtsTestResult(null);
+
+    try {
+      const result = await invoke<string>('test_fts');
+      setFtsTestResult(result);
+    } catch (error) {
+      setFtsTestError(error as string);
+    } finally {
+      setIsTestingFts(false);
     }
   };
 
@@ -82,6 +101,14 @@ function Settings() {
                 >
                   Test Database Connection
                 </Button>
+                <Button
+                  leftSection={<IconSearch size={16} />}
+                  loading={isTestingFts}
+                  variant="outline"
+                  onClick={() => void testFts()}
+                >
+                  Test Search (FTS5)
+                </Button>
               </Group>
 
               {databaseTestResult && (
@@ -100,6 +127,25 @@ function Settings() {
               {testError && (
                 <Alert color="red" icon={<IconX size={16} />} mt="md" title="Database Test Failed">
                   <Text size="sm">{testError}</Text>
+                </Alert>
+              )}
+
+              {ftsTestResult && (
+                <Alert
+                  color="blue"
+                  icon={<IconSearch size={16} />}
+                  mt="md"
+                  title="FTS5 Test Result"
+                >
+                  <Text size="sm" style={{ whiteSpace: 'pre-line' }}>
+                    {ftsTestResult}
+                  </Text>
+                </Alert>
+              )}
+
+              {ftsTestError && (
+                <Alert color="red" icon={<IconX size={16} />} mt="md" title="FTS5 Test Failed">
+                  <Text size="sm">{ftsTestError}</Text>
                 </Alert>
               )}
             </Card>

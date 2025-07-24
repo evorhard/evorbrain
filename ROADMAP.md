@@ -27,6 +27,7 @@ Establish project structure and core architecture
 - [x] Mantine UI and Tailwind CSS integration
 - [x] React Router v7 integration with lazy loading
 - [x] SQLite integration with Rust backend
+- [x] SQLite FTS5 full-text search implementation
 - [ ] File system operations for markdown storage
 
 ### Deliverables
