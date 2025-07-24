@@ -98,11 +98,11 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Configure Tailwind to work with Mantine
   - [x] Set up utility classes and custom styles
   - [ ] Create design system documentation
-- [ ] **TASK-018**: Create base layout components - 🟡
-  - [ ] Design and implement AppShell layout
-  - [ ] Create header with navigation
-  - [ ] Implement sidebar with collapsible menu
-  - [ ] Add main content area with proper spacing
+- [x] **TASK-018**: Create base layout components - 🟡
+  - [x] Design and implement AppShell layout
+  - [x] Create header with navigation
+  - [x] Implement sidebar with collapsible menu
+  - [x] Add main content area with proper spacing
 - [ ] **TASK-019**: Implement routing structure - 🟡
   - [ ] Install and configure React Router
   - [ ] Set up route definitions and lazy loading
@@ -115,15 +115,15 @@ This document provides a granular breakdown of development tasks organized by ph
 
 ### Backend Foundation
 
-- [ ] **TASK-021**: Set up Rust project structure - 🟡
-  - [ ] Organize src-tauri directory with modules
-  - [ ] Create commands module for Tauri commands
-  - [ ] Set up database module structure
-  - [ ] Create utilities and helper modules
-- [ ] **TASK-022**: Integrate SQLite with Rust - 🟡
-  - [ ] Add SQLite dependencies (rusqlite, sqlx)
-  - [ ] Create database connection management
-  - [ ] Set up database initialization and migrations
+- [x] **TASK-021**: Set up Rust project structure - 🟡
+  - [x] Organize src-tauri directory with modules
+  - [x] Create commands module for Tauri commands
+  - [x] Set up database module structure
+  - [x] Create utilities and helper modules
+- 🚧 **TASK-022**: Integrate SQLite with Rust - 🟡
+  - [x] Add SQLite dependencies (rusqlite, sqlx)
+  - [x] Create database connection management
+  - [x] Set up database initialization and migrations
   - [ ] Test basic database operations
 - [ ] **TASK-023**: Implement FTS5 extension setup - 🟡
   - [ ] Enable FTS5 extension in SQLite

@@ -22,7 +22,7 @@ Establish project structure and core architecture
 - [x] Basic Tauri window and IPC communication
 - [x] Basic React + TypeScript frontend (completed)
 - [x] Mantine UI and Tailwind CSS integration
-- [ ] SQLite integration with Rust backend (next priority)
+- 🚧 SQLite integration with Rust backend (in progress)
 - [ ] File system operations for markdown storage
 
 ### Deliverables

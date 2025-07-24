@@ -58,6 +58,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Custom utility classes
   - Dark mode support compatible with Mantine
   - Preflight disabled to prevent conflicts
+- Rust backend foundation:
+  - Organized src-tauri directory structure with modules
+  - Created commands module for Tauri IPC commands
+  - Started database module structure for SQLite integration
+- Base layout components:
+  - Implemented AppShell layout with Mantine AppShell component
+  - Created header with navigation including theme toggle (dark/light mode)
+  - Built collapsible sidebar with navigation items and search functionality
+  - Added main content area with proper spacing and responsive design
+  - Integrated Tabler Icons for consistent UI iconography
+  - Applied Feature-Sliced Design (FSD) architecture for component organization
 
 ### Changed
 - N/A
