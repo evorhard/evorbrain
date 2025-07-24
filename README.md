@@ -48,6 +48,7 @@
 EvorBrain will be a powerful, customizable personal knowledge management system designed for offline-first operation. Built with modern web technologies and packaged as a native desktop application using Tauri, it will combine the best features of tools like Notion and Obsidian while maintaining complete data ownership and privacy.
 
 ✨ **Why EvorBrain?**
+
 - 🔒 **100% Offline** - Your data never leaves your device
 - 📝 **Markdown-based** - Future-proof and portable
 - ⚡ **Lightning Fast** - Native performance with Rust backend
@@ -123,12 +124,22 @@ EvorBrain will be a powerful, customizable personal knowledge management system 
     <tr>
       <td align="center">🦀</td>
       <td><strong>Tauri Integration</strong></td>
-      <td>⏳ Next Up</td>
+      <td>✅ Complete</td>
     </tr>
     <tr>
       <td align="center">⚛️</td>
       <td><strong>React Foundation</strong></td>
-      <td>🚧 In Progress</td>
+      <td>✅ Complete</td>
+    </tr>
+    <tr>
+      <td align="center">🗄️</td>
+      <td><strong>SQLite Database</strong></td>
+      <td>✅ Complete</td>
+    </tr>
+    <tr>
+      <td align="center">📁</td>
+      <td><strong>File Operations</strong></td>
+      <td>⏳ Next Up</td>
     </tr>
   </table>
 </div>
@@ -146,6 +157,7 @@ EvorBrain will be a powerful, customizable personal knowledge management system 
 ### Future Installation
 
 Once development is complete, installation will be available via:
+
 - Direct download from GitHub Releases
 - Package managers (Windows Store, Mac App Store, Linux repositories)
 - Portable versions for all platforms
@@ -155,6 +167,7 @@ Once development is complete, installation will be available via:
 ### 🏗 Architecture
 
 EvorBrain uses a pnpm monorepo structure with:
+
 - **apps/desktop**: Tauri desktop application (React + TypeScript)
 - **packages/core**: Core business logic and data models
 - **packages/ui**: Shared UI components and design system
@@ -173,6 +186,7 @@ EvorBrain uses a pnpm monorepo structure with:
 ### 🚀 Development Setup
 
 #### Prerequisites:
+
 <table>
   <tr>
     <td>📦 Node.js</td>
@@ -222,39 +236,43 @@ Plugin system is planned for Phase 4 of development. Documentation will be avail
 
 Development is organized into six phases:
 
-| Phase | Focus | Status |
-|-------|-------|--------|
-| **1️⃣ Foundation** | Project setup, Tauri integration, basic structure | 🚧 In Progress |
-| **2️⃣ Core Features** | Data model, file storage, basic UI | ⏳ Planned |
-| **3️⃣ Enhanced Features** | Calendar, drag-and-drop, advanced UI | ⏳ Planned |
-| **4️⃣ Plugin System** | Extensibility and third-party plugins | ⏳ Planned |
-| **5️⃣ Performance & Polish** | Optimization, testing, security | ⏳ Planned |
-| **6️⃣ Release** | Distribution, documentation, community | ⏳ Planned |
+| Phase                       | Focus                                             | Status         |
+| --------------------------- | ------------------------------------------------- | -------------- |
+| **1️⃣ Foundation**           | Project setup, Tauri integration, basic structure | 🚧 In Progress |
+| **2️⃣ Core Features**        | Data model, file storage, basic UI                | ⏳ Planned     |
+| **3️⃣ Enhanced Features**    | Calendar, drag-and-drop, advanced UI              | ⏳ Planned     |
+| **4️⃣ Plugin System**        | Extensibility and third-party plugins             | ⏳ Planned     |
+| **5️⃣ Performance & Polish** | Optimization, testing, security                   | ⏳ Planned     |
+| **6️⃣ Release**              | Distribution, documentation, community            | ⏳ Planned     |
 
 See [ROADMAP.md](ROADMAP.md) for detailed milestones and [TASKS.md](TASKS.md) for granular task breakdown.
 
 ## 🤝 Contributing
 
-Contributions are welcome once the basic architecture is established! 
+Contributions are welcome once the basic architecture is established!
 
 ### How You Can Help:
 
 🏗 **Architecture Phase** (Current)
+
 - Review and provide feedback on architecture decisions
 - Suggest improvements to the development workflow
 - Help with documentation and planning
 
 🧪 **Testing Phase** (Coming Soon)
+
 - Test early builds and report bugs
 - Provide UX/UI feedback
 - Help with cross-platform testing
 
 🔌 **Plugin Phase** (Phase 4+)
+
 - Develop plugins for specific workflows
 - Create themes and customizations
 - Build integrations with other tools
 
 📚 **Always Welcome**
+
 - Documentation improvements
 - Translation help (Phase 5+)
 - Community support and engagement

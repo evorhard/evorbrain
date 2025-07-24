@@ -2,13 +2,13 @@
  * API and IPC type definitions
  */
 
-import type { Entity, EntityType, ID } from '../entities/index.js';
 import type { Result } from '../common/index.js';
+import type { Entity, EntityType } from '../entities/index.js';
 
 /**
  * IPC command names
  */
-export type IPCCommand = 
+export type IPCCommand =
   | 'get_entities'
   | 'create_entity'
   | 'update_entity'

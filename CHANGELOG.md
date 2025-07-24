@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Initial project structure and documentation
 - Core application architecture using Tauri 2.0
 - Monorepo setup with pnpm workspaces
@@ -61,7 +62,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rust backend foundation:
   - Organized src-tauri directory structure with modules
   - Created commands module for Tauri IPC commands
-  - Started database module structure for SQLite integration
+  - Completed database module structure for SQLite integration
+  - Implemented SQLite database initialization with all required tables
+  - Added database connection management with rusqlite
+  - Created and tested basic CRUD operations for database entities
+  - Added test command to verify database functionality
 - Base layout components:
   - Implemented AppShell layout with Mantine AppShell component
   - Created header with navigation including theme toggle (dark/light mode)
@@ -85,23 +90,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated AppLayout to work with React Router outlet pattern
 
 ### Changed
+
 - N/A
 
 ### Deprecated
+
 - N/A
 
 ### Removed
+
 - N/A
 
 ### Fixed
+
 - N/A
 
 ### Security
+
 - N/A
 
 ## [1.0.0] - Phase 6 Release
 
 ### Added
+
 - **Core Features**
   - Hierarchical workflow system (Life Areas → Goals → Projects → Tasks)
   - Daily/Upcoming view with status filtering
@@ -139,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Memory usage optimization (<200MB)
 
 ### Security
+
 - Local-only data storage
 - Sandboxed plugin execution
 - Secure IPC communication
@@ -147,28 +159,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0-beta] - Phase 5 Beta
 
 ### Added
+
 - Beta release for community testing
 - Core functionality complete
 - Basic plugin system
 - Documentation and tutorials
 
 ### Changed
+
 - UI refinements based on alpha feedback
 - Performance optimizations
 
 ### Fixed
+
 - Various bugs from alpha testing
 - Memory leaks in long-running sessions
 
 ## [0.5.0-alpha] - Phase 2 Alpha
 
 ### Added
+
 - Alpha release with core features
 - Basic task management
 - File storage system
 - Simple UI implementation
 
 ### Known Issues
+
 - Performance optimization needed
 - Limited keyboard shortcuts
 - No plugin support yet

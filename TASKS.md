@@ -120,11 +120,11 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Create commands module for Tauri commands
   - [x] Set up database module structure
   - [x] Create utilities and helper modules
-- 🚧 **TASK-022**: Integrate SQLite with Rust - 🟡
+- [x] **TASK-022**: Integrate SQLite with Rust - 🟡
   - [x] Add SQLite dependencies (rusqlite, sqlx)
   - [x] Create database connection management
   - [x] Set up database initialization and migrations
-  - [ ] Test basic database operations
+  - [x] Test basic database operations
 - [ ] **TASK-023**: Implement FTS5 extension setup - 🟡
   - [ ] Enable FTS5 extension in SQLite
   - [ ] Create FTS5 tables for content indexing

@@ -29,6 +29,7 @@
   "packageManager": "pnpm@8.15.0",
   "scripts": {
     "dev": "pnpm --filter \"@evorbrain/*\" run dev",
+    "dev:tauri": "pnpm --filter @evorbrain/desktop dev:tauri",
     "build": "pnpm --filter \"@evorbrain/*\" run build",
     "test": "pnpm --filter \"@evorbrain/*\" run test",
     "test:ci": "pnpm --filter \"@evorbrain/*\" run test:ci",

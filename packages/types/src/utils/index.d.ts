@@ -26,7 +26,7 @@ export type NonNullable<T> = T extends null | undefined ? never : T;
  * Get the keys of T that are optional
  */
 export type OptionalKeys<T> = {
-  [K in keyof T]-?: {} extends Pick<T, K> ? K : never;
+  [K in keyof T]-?: object extends Pick<T, K> ? K : never;
 }[keyof T];
 
 /**
@@ -49,8 +49,7 @@ export type ValueOf<T> = T[keyof T];
 /**
  * Async function type
  */
-export type AsyncFunction<T extends unknown[] = unknown[], R = void> = 
-  (...args: T) => Promise<R>;
+export type AsyncFunction<T extends unknown[] = unknown[], R = void> = (...args: T) => Promise<R>;
 
 /**
  * Type guard function
