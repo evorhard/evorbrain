@@ -34,6 +34,7 @@ pub enum ErrorCode {
     MissingRequiredField = 4002,
     InvalidFormat = 4003,
     ValueOutOfRange = 4004,
+    ValidationFailed = 4005,
     
     // Operation errors (5xxx)
     OperationFailed = 5001,
@@ -400,6 +401,23 @@ impl AppError {
                 user_action: "Validating input".to_string(),
                 recovery_suggestions: vec![
                     format!("Please ensure '{}' follows the format: {}", field, expected),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        }
+    }
+    
+    /// Create a general validation error
+    pub fn validation(reason: &str, field: Option<String>) -> Self {
+        AppError::Validation {
+            field: field.unwrap_or_else(|| "unknown".to_string()),
+            reason: reason.to_string(),
+            code: ErrorCode::ValidationFailed,
+            context: Some(ErrorContext {
+                user_action: "Validating input".to_string(),
+                recovery_suggestions: vec![
+                    format!("Please check the value and try again: {}", reason),
                 ],
                 recoverable: true,
                 help_url: None,

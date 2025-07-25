@@ -1,9 +1,10 @@
 use crate::errors::{AppError, ErrorCode};
-use crate::models::{Area, Goal, Project, Task, GoalStatus, ProjectStatus, TaskStatus, Priority};
+use crate::models::{Area, Goal, Project, Task, GoalStatus, ProjectStatus, TaskStatus, TaskPriority};
 use rusqlite::{Connection, params, Row};
 // Removed unused imports - serde traits are already derived
 use tauri::Manager;
 use chrono::{DateTime, Utc};
+use serde_json;
 
 // Helper to get database connection
 fn get_db_connection(app_handle: &tauri::AppHandle) -> Result<Connection, AppError> {
@@ -43,6 +44,9 @@ fn get_db_connection(app_handle: &tauri::AppHandle) -> Result<Connection, AppErr
 
 // Helper functions to parse database rows
 fn parse_area(row: &Row) -> Result<Area, rusqlite::Error> {
+    let tags_json: Option<String> = row.get(8)?;
+    let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+    
     Ok(Area {
         id: row.get(0)?,
         title: row.get(1)?,
@@ -55,16 +59,18 @@ fn parse_area(row: &Row) -> Result<Area, rusqlite::Error> {
         updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
             .unwrap()
             .with_timezone(&Utc),
+        sort_order: row.get(7)?,
+        tags,
+        entity_type: "area".to_string(),
     })
 }
 
 fn parse_goal_status(status: &str) -> GoalStatus {
     match status {
-        "not-started" => GoalStatus::NotStarted,
-        "in-progress" => GoalStatus::InProgress,
+        "active" => GoalStatus::Active,
         "completed" => GoalStatus::Completed,
-        "on-hold" => GoalStatus::OnHold,
-        _ => GoalStatus::NotStarted,
+        "abandoned" => GoalStatus::Abandoned,
+        _ => GoalStatus::Active,
     }
 }
 
@@ -89,21 +95,21 @@ fn parse_task_status(status: &str) -> TaskStatus {
     }
 }
 
-fn parse_priority(priority: Option<String>) -> Option<Priority> {
-    priority.and_then(|p| match p.as_str() {
-        "high" => Some(Priority::High),
-        "medium" => Some(Priority::Medium),
-        "low" => Some(Priority::Low),
-        _ => None,
-    })
+fn parse_task_priority(priority: Option<String>) -> TaskPriority {
+    priority.map(|p| match p.as_str() {
+        "urgent" => TaskPriority::Urgent,
+        "high" => TaskPriority::High,
+        "medium" => TaskPriority::Medium,
+        "low" => TaskPriority::Low,
+        _ => TaskPriority::Medium,
+    }).unwrap_or(TaskPriority::Medium)
 }
 
 fn goal_status_to_string(status: &GoalStatus) -> &'static str {
     match status {
-        GoalStatus::NotStarted => "not-started",
-        GoalStatus::InProgress => "in-progress",
+        GoalStatus::Active => "active",
         GoalStatus::Completed => "completed",
-        GoalStatus::OnHold => "on-hold",
+        GoalStatus::Abandoned => "abandoned",
     }
 }
 
@@ -126,12 +132,13 @@ fn task_status_to_string(status: &TaskStatus) -> &'static str {
     }
 }
 
-fn priority_to_string(priority: &Option<Priority>) -> Option<&'static str> {
-    priority.as_ref().map(|p| match p {
-        Priority::High => "high",
-        Priority::Medium => "medium",
-        Priority::Low => "low",
-    })
+fn task_priority_to_string(priority: &TaskPriority) -> &'static str {
+    match priority {
+        TaskPriority::Urgent => "urgent",
+        TaskPriority::High => "high",
+        TaskPriority::Medium => "medium",
+        TaskPriority::Low => "low",
+    }
 }
 
 // Area Commands
@@ -164,14 +171,20 @@ pub async fn create_area(
         });
     }
     
-    let area = Area::new(title, description);
-    let area = Area { color, icon, ..area };
+    let mut area = Area::new(title, description);
+    area.color = color;
+    area.icon = icon;
+    
+    // Validate the area
+    area.validate()?;
     
     let conn = get_db_connection(&app_handle)?;
     
+    let tags_json = area.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    
     conn.execute(
-        "INSERT INTO areas (id, title, description, color, icon, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        "INSERT INTO areas (id, title, description, color, icon, created_at, updated_at, sort_order, tags)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
         params![
             &area.id,
             &area.title,
@@ -180,6 +193,8 @@ pub async fn create_area(
             &area.icon,
             area.created_at.to_rfc3339(),
             area.updated_at.to_rfc3339(),
+            area.sort_order,
+            &tags_json,
         ],
     ).map_err(|e| {
         log::error!("Failed to create area: {}", e);
@@ -224,7 +239,7 @@ pub async fn get_area(
     let conn = get_db_connection(&app_handle)?;
     
     let area = conn.query_row(
-        "SELECT id, title, description, color, icon, created_at, updated_at 
+        "SELECT id, title, description, color, icon, created_at, updated_at, sort_order, tags 
          FROM areas WHERE id = ?1",
         params![&id],
         parse_area,
@@ -327,26 +342,36 @@ pub async fn create_goal(
 ) -> Result<Goal, AppError> {
     let mut goal = Goal::new(area_id, title, description);
     
-    if let Some(date_str) = target_date {
-        goal.target_date = DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc));
+    // Validate target date if provided
+    if let Some(date_str) = &target_date {
+        // Try to parse to validate the format
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("target_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
     }
+    goal.target_date = target_date;
+    
+    // Validate the goal
+    goal.validate()?;
     
     let conn = get_db_connection(&app_handle)?;
     
+    let tags_json = goal.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    
     conn.execute(
-        "INSERT INTO goals (id, area_id, title, description, target_date, status, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        "INSERT INTO goals (id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
         params![
             &goal.id,
             &goal.area_id,
             &goal.title,
             &goal.description,
-            goal.target_date.map(|dt| dt.to_rfc3339()),
+            &goal.target_date,
             goal_status_to_string(&goal.status),
+            goal.progress,
             goal.created_at.to_rfc3339(),
             goal.updated_at.to_rfc3339(),
+            goal.sort_order,
+            &tags_json,
         ],
     )?;
     
@@ -361,26 +386,31 @@ pub async fn get_goals_by_area(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, area_id, title, description, target_date, status, created_at, updated_at 
-         FROM goals WHERE area_id = ?1 ORDER BY title"
+        "SELECT id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags 
+         FROM goals WHERE area_id = ?1 ORDER BY sort_order, title"
     )?;
     
     let goals = stmt.query_map(params![&area_id], |row| {
+        let tags_json: Option<String> = row.get(10)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Goal {
             id: row.get(0)?,
             area_id: row.get(1)?,
             title: row.get(2)?,
             description: row.get(3)?,
-            target_date: row.get::<_, Option<String>>(4)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
+            target_date: row.get(4)?,
             status: parse_goal_status(&row.get::<_, String>(5)?),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
+            progress: row.get(6)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(9)?,
+            tags,
+            entity_type: "goal".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -400,35 +430,55 @@ pub async fn create_project(
 ) -> Result<Project, AppError> {
     let mut project = Project::new(goal_id, title, description);
     
-    if let Some(date_str) = start_date {
-        project.start_date = DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc));
+    // Validate dates if provided
+    if let Some(date_str) = &start_date {
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("start_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
+    }
+    if let Some(date_str) = &end_date {
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("end_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
     }
     
-    if let Some(date_str) = end_date {
-        project.end_date = DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc));
-    }
+    project.start_date = start_date;
+    project.end_date = end_date;
+    
+    // Validate the project
+    project.validate()?;
     
     let conn = get_db_connection(&app_handle)?;
     
+    let tags_json = project.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    
     conn.execute(
-        "INSERT INTO projects (id, goal_id, title, description, status, start_date, end_date, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        "INSERT INTO projects (id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         params![
             &project.id,
             &project.goal_id,
             &project.title,
             &project.description,
             project_status_to_string(&project.status),
-            project.start_date.map(|dt| dt.to_rfc3339()),
-            project.end_date.map(|dt| dt.to_rfc3339()),
+            &project.start_date,
+            &project.end_date,
+            project.progress,
             project.created_at.to_rfc3339(),
             project.updated_at.to_rfc3339(),
+            project.sort_order,
+            &tags_json,
         ],
-    )?;
+    ).map_err(|e| {
+        log::error!("Failed to create project: {}", e);
+        AppError::from(e).with_context(crate::errors::ErrorContext {
+            user_action: "Creating project".to_string(),
+            recovery_suggestions: vec![
+                "Check if the goal exists".to_string(),
+                "Ensure dates are valid".to_string(),
+            ],
+            recoverable: true,
+            help_url: None,
+        })
+    })?;
     
     Ok(project)
 }
@@ -441,29 +491,32 @@ pub async fn get_projects_by_goal(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, goal_id, title, description, status, start_date, end_date, created_at, updated_at 
-         FROM projects WHERE goal_id = ?1 ORDER BY title"
+        "SELECT id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags 
+         FROM projects WHERE goal_id = ?1 ORDER BY sort_order, title"
     )?;
     
     let projects = stmt.query_map(params![&goal_id], |row| {
+        let tags_json: Option<String> = row.get(11)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Project {
             id: row.get(0)?,
             goal_id: row.get(1)?,
             title: row.get(2)?,
             description: row.get(3)?,
             status: parse_project_status(&row.get::<_, String>(4)?),
-            start_date: row.get::<_, Option<String>>(5)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            end_date: row.get::<_, Option<String>>(6)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
+            start_date: row.get(5)?,
+            end_date: row.get(6)?,
+            progress: row.get(7)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(10)?,
+            tags,
+            entity_type: "project".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -486,11 +539,11 @@ pub async fn update_goal(
     // Validate status
     let goal_status = parse_goal_status(&status);
     
-    let target_datetime = target_date.and_then(|date_str| {
-        DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc))
-    });
+    // Validate target date if provided
+    if let Some(date_str) = &target_date {
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("target_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
+    }
     
     conn.execute(
         "UPDATE goals SET title = ?1, description = ?2, target_date = ?3, status = ?4, 
@@ -498,7 +551,7 @@ pub async fn update_goal(
         params![
             &title,
             &description,
-            target_datetime.map(|dt| dt.to_rfc3339()),
+            &target_date,
             goal_status_to_string(&goal_status),
             Utc::now().to_rfc3339(),
             &id,
@@ -546,25 +599,30 @@ pub async fn get_goal(
     let conn = get_db_connection(&app_handle)?;
     
     let goal = conn.query_row(
-        "SELECT id, area_id, title, description, target_date, status, created_at, updated_at 
+        "SELECT id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags 
          FROM goals WHERE id = ?1",
         params![&id],
         |row| {
+            let tags_json: Option<String> = row.get(10)?;
+            let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+            
             Ok(Goal {
                 id: row.get(0)?,
                 area_id: row.get(1)?,
                 title: row.get(2)?,
                 description: row.get(3)?,
-                target_date: row.get::<_, Option<String>>(4)?
-                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                    .map(|dt| dt.with_timezone(&Utc)),
+                target_date: row.get(4)?,
                 status: parse_goal_status(&row.get::<_, String>(5)?),
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
+                progress: row.get(6)?,
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
                     .unwrap()
                     .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                     .unwrap()
                     .with_timezone(&Utc),
+                sort_order: row.get(9)?,
+                tags,
+                entity_type: "goal".to_string(),
             })
         },
     )?;
@@ -580,26 +638,31 @@ pub async fn get_all_goals(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, area_id, title, description, target_date, status, created_at, updated_at 
-         FROM goals ORDER BY title"
+        "SELECT id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags 
+         FROM goals ORDER BY sort_order, title"
     )?;
     
     let goals = stmt.query_map([], |row| {
+        let tags_json: Option<String> = row.get(10)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Goal {
             id: row.get(0)?,
             area_id: row.get(1)?,
             title: row.get(2)?,
             description: row.get(3)?,
-            target_date: row.get::<_, Option<String>>(4)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
+            target_date: row.get(4)?,
             status: parse_goal_status(&row.get::<_, String>(5)?),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
+            progress: row.get(6)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(9)?,
+            tags,
+            entity_type: "goal".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -623,17 +686,15 @@ pub async fn update_project(
     // Validate status
     let project_status = parse_project_status(&status);
     
-    let start_datetime = start_date.and_then(|date_str| {
-        DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc))
-    });
-    
-    let end_datetime = end_date.and_then(|date_str| {
-        DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc))
-    });
+    // Validate dates if provided
+    if let Some(date_str) = &start_date {
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("start_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
+    }
+    if let Some(date_str) = &end_date {
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("end_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
+    }
     
     conn.execute(
         "UPDATE projects SET title = ?1, description = ?2, status = ?3, start_date = ?4, 
@@ -642,8 +703,8 @@ pub async fn update_project(
             &title,
             &description,
             project_status_to_string(&project_status),
-            start_datetime.map(|dt| dt.to_rfc3339()),
-            end_datetime.map(|dt| dt.to_rfc3339()),
+            &start_date,
+            &end_date,
             Utc::now().to_rfc3339(),
             &id,
         ],
@@ -690,28 +751,31 @@ pub async fn get_project(
     let conn = get_db_connection(&app_handle)?;
     
     let project = conn.query_row(
-        "SELECT id, goal_id, title, description, status, start_date, end_date, created_at, updated_at 
+        "SELECT id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags 
          FROM projects WHERE id = ?1",
         params![&id],
         |row| {
+            let tags_json: Option<String> = row.get(11)?;
+            let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+            
             Ok(Project {
                 id: row.get(0)?,
                 goal_id: row.get(1)?,
                 title: row.get(2)?,
                 description: row.get(3)?,
                 status: parse_project_status(&row.get::<_, String>(4)?),
-                start_date: row.get::<_, Option<String>>(5)?
-                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                    .map(|dt| dt.with_timezone(&Utc)),
-                end_date: row.get::<_, Option<String>>(6)?
-                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                    .map(|dt| dt.with_timezone(&Utc)),
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
+                start_date: row.get(5)?,
+                end_date: row.get(6)?,
+                progress: row.get(7)?,
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                     .unwrap()
                     .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
                     .unwrap()
                     .with_timezone(&Utc),
+                sort_order: row.get(10)?,
+                tags,
+                entity_type: "project".to_string(),
             })
         },
     )?;
@@ -727,29 +791,32 @@ pub async fn get_all_projects(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, goal_id, title, description, status, start_date, end_date, created_at, updated_at 
-         FROM projects ORDER BY title"
+        "SELECT id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags 
+         FROM projects ORDER BY sort_order, title"
     )?;
     
     let projects = stmt.query_map([], |row| {
+        let tags_json: Option<String> = row.get(11)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Project {
             id: row.get(0)?,
             goal_id: row.get(1)?,
             title: row.get(2)?,
             description: row.get(3)?,
             status: parse_project_status(&row.get::<_, String>(4)?),
-            start_date: row.get::<_, Option<String>>(5)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            end_date: row.get::<_, Option<String>>(6)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
+            start_date: row.get(5)?,
+            end_date: row.get(6)?,
+            progress: row.get(7)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(10)?,
+            tags,
+            entity_type: "project".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -772,24 +839,35 @@ pub async fn create_task(
     task.project_id = project_id;
     task.parent_task_id = parent_task_id;
     
-    if let Some(date_str) = due_date {
-        task.due_date = DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc));
+    // Validate due date if provided
+    if let Some(date_str) = &due_date {
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("due_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
+    }
+    task.due_date = due_date;
+    
+    if let Some(p) = priority {
+        task.priority = match p.as_str() {
+            "urgent" => TaskPriority::Urgent,
+            "high" => TaskPriority::High,
+            "medium" => TaskPriority::Medium,
+            "low" => TaskPriority::Low,
+            _ => TaskPriority::Medium,
+        };
     }
     
-    task.priority = priority.and_then(|p| match p.as_str() {
-        "high" => Some(Priority::High),
-        "medium" => Some(Priority::Medium),
-        "low" => Some(Priority::Low),
-        _ => None,
-    });
+    // Validate the task
+    task.validate()?;
     
     let conn = get_db_connection(&app_handle)?;
     
+    let tags_json = task.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    
     conn.execute(
-        "INSERT INTO tasks (id, project_id, parent_task_id, title, description, status, due_date, priority, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+        "INSERT INTO tasks (id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags, 
+         recurrence, recurrence_id, recurrence_date)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
         params![
             &task.id,
             &task.project_id,
@@ -797,10 +875,18 @@ pub async fn create_task(
             &task.title,
             &task.description,
             task_status_to_string(&task.status),
-            task.due_date.map(|dt| dt.to_rfc3339()),
-            priority_to_string(&task.priority),
+            &task.due_date,
+            task_priority_to_string(&task.priority),
+            &task.completed_at,
+            task.estimated_minutes,
+            task.actual_minutes,
             task.created_at.to_rfc3339(),
             task.updated_at.to_rfc3339(),
+            task.sort_order,
+            &tags_json,
+            task.recurrence.as_ref().map(|r| serde_json::to_string(r).unwrap_or_else(|_| "null".to_string())),
+            &task.recurrence_id,
+            &task.recurrence_date,
         ],
     )?;
     
@@ -815,11 +901,18 @@ pub async fn get_tasks_by_project(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, created_at, updated_at 
-         FROM tasks WHERE project_id = ?1 ORDER BY created_at"
+        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags, 
+         recurrence, recurrence_id, recurrence_date 
+         FROM tasks WHERE project_id = ?1 ORDER BY sort_order, created_at"
     )?;
     
     let tasks = stmt.query_map(params![&project_id], |row| {
+        let tags_json: Option<String> = row.get(14)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        let recurrence_json: Option<String> = row.get(15)?;
+        let recurrence = recurrence_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Task {
             id: row.get(0)?,
             project_id: row.get(1)?,
@@ -827,16 +920,23 @@ pub async fn get_tasks_by_project(
             title: row.get(3)?,
             description: row.get(4)?,
             status: parse_task_status(&row.get::<_, String>(5)?),
-            due_date: row.get::<_, Option<String>>(6)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            priority: parse_priority(row.get(7)?),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+            due_date: row.get(6)?,
+            priority: parse_task_priority(row.get(7)?),
+            completed_at: row.get(8)?,
+            estimated_minutes: row.get(9)?,
+            actual_minutes: row.get(10)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(13)?,
+            tags,
+            recurrence,
+            recurrence_id: row.get(16)?,
+            recurrence_date: row.get(17)?,
+            entity_type: "task".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -853,11 +953,18 @@ pub async fn update_task_status(
     let conn = get_db_connection(&app_handle)?;
     
     // Validate status
-    let _ = parse_task_status(&status);
+    let task_status = parse_task_status(&status);
+    
+    // Set completed_at if completing the task
+    let completed_at = if task_status == TaskStatus::Completed {
+        Some(Utc::now().to_rfc3339())
+    } else {
+        None
+    };
     
     conn.execute(
-        "UPDATE tasks SET status = ?1, updated_at = ?2 WHERE id = ?3",
-        params![&status, Utc::now().to_rfc3339(), &id],
+        "UPDATE tasks SET status = ?1, completed_at = ?2, updated_at = ?3 WHERE id = ?4",
+        params![&status, &completed_at, Utc::now().to_rfc3339(), &id],
     )?;
     
     Ok(())
@@ -900,7 +1007,9 @@ pub async fn get_task(
     let conn = get_db_connection(&app_handle)?;
     
     let task = conn.query_row(
-        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, created_at, updated_at 
+        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags,
+         recurrence, recurrence_id, recurrence_date
          FROM tasks WHERE id = ?1",
         params![&id],
         |row| {
@@ -911,16 +1020,25 @@ pub async fn get_task(
                 title: row.get(3)?,
                 description: row.get(4)?,
                 status: parse_task_status(&row.get::<_, String>(5)?),
-                due_date: row.get::<_, Option<String>>(6)?
-                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                    .map(|dt| dt.with_timezone(&Utc)),
-                priority: parse_priority(row.get(7)?),
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+                due_date: row.get(6)?,
+                priority: parse_task_priority(row.get::<_, Option<String>>(7)?),
+                completed_at: row.get(8)?,
+                estimated_minutes: row.get(9)?,
+                actual_minutes: row.get(10)?,
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
                     .unwrap()
                     .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
                     .unwrap()
                     .with_timezone(&Utc),
+                sort_order: row.get(13)?,
+                tags: row.get::<_, Option<String>>(14)?
+                    .and_then(|s| serde_json::from_str(&s).ok()),
+                entity_type: "task".to_string(),
+                recurrence: row.get::<_, Option<String>>(15)?
+                    .and_then(|s| serde_json::from_str(&s).ok()),
+                recurrence_id: row.get(16)?,
+                recurrence_date: row.get(17)?,
             })
         },
     )?;
@@ -936,8 +1054,10 @@ pub async fn get_all_tasks(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, created_at, updated_at 
-         FROM tasks ORDER BY created_at DESC"
+        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags,
+         recurrence, recurrence_id, recurrence_date
+         FROM tasks ORDER BY sort_order, created_at DESC"
     )?;
     
     let tasks = stmt.query_map([], |row| {
@@ -948,16 +1068,25 @@ pub async fn get_all_tasks(
             title: row.get(3)?,
             description: row.get(4)?,
             status: parse_task_status(&row.get::<_, String>(5)?),
-            due_date: row.get::<_, Option<String>>(6)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            priority: parse_priority(row.get(7)?),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+            due_date: row.get(6)?,
+            priority: parse_task_priority(row.get::<_, Option<String>>(7)?),
+            completed_at: row.get(8)?,
+            estimated_minutes: row.get(9)?,
+            actual_minutes: row.get(10)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(13)?,
+            tags: row.get::<_, Option<String>>(14)?
+                .and_then(|s| serde_json::from_str(&s).ok()),
+            entity_type: "task".to_string(),
+            recurrence: row.get::<_, Option<String>>(15)?
+                .and_then(|s| serde_json::from_str(&s).ok()),
+            recurrence_id: row.get(16)?,
+            recurrence_date: row.get(17)?,
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -981,18 +1110,7 @@ pub async fn update_task(
     // Validate status
     let task_status = parse_task_status(&status);
     
-    let due_datetime = due_date.and_then(|date_str| {
-        DateTime::parse_from_rfc3339(&date_str)
-            .ok()
-            .map(|dt| dt.with_timezone(&Utc))
-    });
-    
-    let task_priority = priority.and_then(|p| match p.as_str() {
-        "high" => Some(Priority::High),
-        "medium" => Some(Priority::Medium),
-        "low" => Some(Priority::Low),
-        _ => None,
-    });
+    let task_priority = parse_task_priority(priority);
     
     conn.execute(
         "UPDATE tasks SET title = ?1, description = ?2, status = ?3, due_date = ?4, 
@@ -1001,8 +1119,8 @@ pub async fn update_task(
             &title,
             &description,
             task_status_to_string(&task_status),
-            due_datetime.map(|dt| dt.to_rfc3339()),
-            priority_to_string(&task_priority),
+            &due_date,
+            task_priority_to_string(&task_priority),
             Utc::now().to_rfc3339(),
             &id,
         ],
@@ -1023,11 +1141,18 @@ pub async fn get_tasks_by_status(
     let _ = parse_task_status(&status);
     
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, created_at, updated_at 
-         FROM tasks WHERE status = ?1 ORDER BY created_at DESC"
+        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags, 
+         recurrence, recurrence_id, recurrence_date 
+         FROM tasks WHERE status = ?1 ORDER BY sort_order, created_at DESC"
     )?;
     
     let tasks = stmt.query_map(params![&status], |row| {
+        let tags_json: Option<String> = row.get(14)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        let recurrence_json: Option<String> = row.get(15)?;
+        let recurrence = recurrence_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Task {
             id: row.get(0)?,
             project_id: row.get(1)?,
@@ -1035,16 +1160,23 @@ pub async fn get_tasks_by_status(
             title: row.get(3)?,
             description: row.get(4)?,
             status: parse_task_status(&row.get::<_, String>(5)?),
-            due_date: row.get::<_, Option<String>>(6)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            priority: parse_priority(row.get(7)?),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+            due_date: row.get(6)?,
+            priority: parse_task_priority(row.get(7)?),
+            completed_at: row.get(8)?,
+            estimated_minutes: row.get(9)?,
+            actual_minutes: row.get(10)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(13)?,
+            tags,
+            recurrence,
+            recurrence_id: row.get(16)?,
+            recurrence_date: row.get(17)?,
+            entity_type: "task".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -1062,7 +1194,9 @@ pub async fn get_upcoming_tasks(
     let future_date = Utc::now() + chrono::Duration::days(days);
     
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, created_at, updated_at 
+        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags, 
+         recurrence, recurrence_id, recurrence_date 
          FROM tasks 
          WHERE due_date IS NOT NULL 
          AND date(due_date) <= date(?)
@@ -1072,6 +1206,11 @@ pub async fn get_upcoming_tasks(
     )?;
     
     let tasks = stmt.query_map(params![future_date.to_rfc3339()], |row| {
+        let tags_json: Option<String> = row.get(14)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        let recurrence_json: Option<String> = row.get(15)?;
+        let recurrence = recurrence_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Task {
             id: row.get(0)?,
             project_id: row.get(1)?,
@@ -1079,16 +1218,23 @@ pub async fn get_upcoming_tasks(
             title: row.get(3)?,
             description: row.get(4)?,
             status: parse_task_status(&row.get::<_, String>(5)?),
-            due_date: row.get::<_, Option<String>>(6)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            priority: parse_priority(row.get(7)?),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+            due_date: row.get(6)?,
+            priority: parse_task_priority(row.get(7)?),
+            completed_at: row.get(8)?,
+            estimated_minutes: row.get(9)?,
+            actual_minutes: row.get(10)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(13)?,
+            tags,
+            recurrence,
+            recurrence_id: row.get(16)?,
+            recurrence_date: row.get(17)?,
+            entity_type: "task".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;
@@ -1104,11 +1250,18 @@ pub async fn get_subtasks(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, created_at, updated_at 
-         FROM tasks WHERE parent_task_id = ?1 ORDER BY created_at"
+        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags, 
+         recurrence, recurrence_id, recurrence_date 
+         FROM tasks WHERE parent_task_id = ?1 ORDER BY sort_order, created_at"
     )?;
     
     let tasks = stmt.query_map(params![&parent_task_id], |row| {
+        let tags_json: Option<String> = row.get(14)?;
+        let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+        let recurrence_json: Option<String> = row.get(15)?;
+        let recurrence = recurrence_json.and_then(|json| serde_json::from_str(&json).ok());
+        
         Ok(Task {
             id: row.get(0)?,
             project_id: row.get(1)?,
@@ -1116,16 +1269,23 @@ pub async fn get_subtasks(
             title: row.get(3)?,
             description: row.get(4)?,
             status: parse_task_status(&row.get::<_, String>(5)?),
-            due_date: row.get::<_, Option<String>>(6)?
-                .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
-                .map(|dt| dt.with_timezone(&Utc)),
-            priority: parse_priority(row.get(7)?),
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
+            due_date: row.get(6)?,
+            priority: parse_task_priority(row.get(7)?),
+            completed_at: row.get(8)?,
+            estimated_minutes: row.get(9)?,
+            actual_minutes: row.get(10)?,
+            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
                 .unwrap()
                 .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
+            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
                 .unwrap()
                 .with_timezone(&Utc),
+            sort_order: row.get(13)?,
+            tags,
+            recurrence,
+            recurrence_id: row.get(16)?,
+            recurrence_date: row.get(17)?,
+            entity_type: "task".to_string(),
         })
     })?
     .collect::<Result<Vec<_>, _>>()?;

@@ -15,7 +15,9 @@ pub fn init_database(db_path: &Path) -> Result<()> {
             color TEXT,
             icon TEXT,
             created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
+            updated_at TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            tags TEXT
         )",
         [],
     )?;
@@ -28,8 +30,11 @@ pub fn init_database(db_path: &Path) -> Result<()> {
             description TEXT,
             target_date TEXT,
             status TEXT NOT NULL,
+            progress INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            tags TEXT,
             FOREIGN KEY (area_id) REFERENCES areas(id)
         )",
         [],
@@ -44,8 +49,11 @@ pub fn init_database(db_path: &Path) -> Result<()> {
             status TEXT NOT NULL,
             start_date TEXT,
             end_date TEXT,
+            progress INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            tags TEXT,
             FOREIGN KEY (goal_id) REFERENCES goals(id)
         )",
         [],
@@ -60,9 +68,17 @@ pub fn init_database(db_path: &Path) -> Result<()> {
             description TEXT,
             status TEXT NOT NULL,
             due_date TEXT,
-            priority TEXT,
+            priority TEXT NOT NULL DEFAULT 'medium',
+            completed_at TEXT,
+            estimated_minutes INTEGER,
+            actual_minutes INTEGER,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            tags TEXT,
+            recurrence TEXT,
+            recurrence_id TEXT,
+            recurrence_date TEXT,
             FOREIGN KEY (project_id) REFERENCES projects(id),
             FOREIGN KEY (parent_task_id) REFERENCES tasks(id)
         )",

@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Implemented shared base entity methods for persistence, metadata, and history
     - Created recurrence support for tasks with RecurrenceRule interface
     - Added comprehensive usage examples and documentation
+  - Completed Rust entity structs with serialization (TASK-028):
+    - Created Entity trait for common fields and behaviors
+    - Implemented Area, Goal, Project, and Task structs matching TypeScript interfaces
+    - Added RecurrenceRule struct with proper serialization
+    - Implemented comprehensive validation methods for all entity types
+    - Updated database schema to include all new fields (tags, progress, sort_order, etc.)
+    - Fixed all Tauri command handlers to use the new struct fields
+    - Added proper date handling and serialization with serde
 
 ## [Phase 1 Complete] - 2025-07-25
 

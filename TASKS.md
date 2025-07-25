@@ -157,12 +157,12 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Design Project interface with goal links
   - [x] Define Task interface with project/standalone support
   - [x] Create shared entity base interface
-- [ ] **TASK-028**: Create Rust structs for entities - 🟡
-  - [ ] Define Area struct with serialization
-  - [ ] Create Goal struct with area foreign keys
-  - [ ] Implement Project struct with relationships
-  - [ ] Define Task struct with flexible parent links
-  - [ ] Add entity validation and constraints
+- [x] **TASK-028**: Create Rust structs for entities - ✅
+  - [x] Define Area struct with serialization
+  - [x] Create Goal struct with area foreign keys
+  - [x] Implement Project struct with relationships
+  - [x] Define Task struct with flexible parent links
+  - [x] Add entity validation and constraints
 - [ ] **TASK-029**: Implement Area entity CRUD - 🟠
   - [ ] Create area creation with validation
   - [ ] Implement area reading and querying

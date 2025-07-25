@@ -182,7 +182,7 @@ mod tests {
         // Wait for event
         sleep(Duration::from_millis(400)).await;
         
-        if let Ok(Some(event)) = event_rx.try_recv() {
+        if let Ok(event) = event_rx.try_recv() {
             match event {
                 FileEvent::Created(p) => {
                     assert!(p.ends_with("test.txt"));
@@ -212,7 +212,7 @@ mod tests {
         
         // Should only get one or two events due to debouncing
         let mut event_count = 0;
-        while let Ok(Some(_)) = watcher.rx.try_recv() {
+        while let Ok(_) = watcher.rx.try_recv() {
             event_count += 1;
         }
         
