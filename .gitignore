@@ -22,7 +22,9 @@ src-tauri/target/
 src-tauri/WixTools/
 src-tauri/gen/
 apps/*/src-tauri/target/
+apps/*/src-tauri/gen/
 packages/*/src-tauri/target/
+packages/*/src-tauri/gen/
 
 # TypeScript
 *.tsbuildinfo
