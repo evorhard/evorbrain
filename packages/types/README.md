@@ -25,6 +25,8 @@ packages/types/
 
 ## Usage
 
+### Basic Types
+
 ```typescript
 import type { EntityStatus, ID, Timestamp } from '@evorbrain/types';
 
@@ -32,6 +34,73 @@ import type { EntityStatus, ID, Timestamp } from '@evorbrain/types';
 const status: EntityStatus = 'active';
 const id: ID = 'abc123';
 ```
+
+### Entity Interfaces
+
+```typescript
+import type { Area, Goal, Project, Task } from '@evorbrain/types';
+
+// Basic entity interfaces (data only)
+const area: Area = {
+  id: 'area_123',
+  type: 'area',
+  title: 'Health & Fitness',
+  description: 'Physical and mental well-being',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  sortOrder: 1
+};
+```
+
+### Entity Interfaces with Methods
+
+```typescript
+import type { 
+  AreaWithMethods, 
+  GoalWithMethods, 
+  ProjectWithMethods, 
+  TaskWithMethods 
+} from '@evorbrain/types';
+
+// Entity interfaces with business logic methods
+async function workWithArea(area: AreaWithMethods) {
+  const goals = await area.getGoals();
+  const progress = area.calculateProgress();
+  
+  if (area.canBeDeleted()) {
+    await area.delete();
+  }
+}
+
+async function workWithTask(task: TaskWithMethods) {
+  if (task.isOverdue()) {
+    await task.setPriority('urgent');
+  }
+  
+  await task.start();
+  await task.startTimer();
+  
+  // ... do work ...
+  
+  await task.stopTimer();
+  await task.complete();
+  
+  if (task.isRecurring()) {
+    await task.createNextInstance();
+  }
+}
+```
+
+### Common Methods Available
+
+All entities with methods extend the `BaseEntityMethods` interface:
+
+- **Persistence**: `save()`, `delete()`, `reload()`
+- **Metadata**: `addTag()`, `removeTag()`, `hasTag()`
+- **Export**: `toMarkdown()`, `toJSON()`, `clone()`
+- **History**: `getHistory()`, `revertTo()`
+
+Each entity type also has specific methods for their domain logic. See the [examples](./examples/entity-usage.ts) for detailed usage.
 
 ## Adding New Types
 

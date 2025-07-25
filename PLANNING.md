@@ -406,6 +406,13 @@ interface MigrationPipeline {
 **Decision**: Implement rich error types with codes, severity levels, and recovery suggestions  
 **Consequences**: Better user experience, easier debugging, consistent error reporting
 
+### ADR-010: Entity Interfaces with Methods
+
+**Status**: Accepted  
+**Context**: Need business logic encapsulation for entities with clear separation between data and behavior  
+**Decision**: Create dual interfaces - plain data interfaces and extended interfaces with methods  
+**Consequences**: Better type safety, clearer API contracts, easier testing with mock implementations
+
 ## Risk Analysis
 
 ### Technical Risks

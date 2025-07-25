@@ -151,12 +151,12 @@ This document provides a granular breakdown of development tasks organized by ph
 
 ### Data Model Implementation
 
-- [ ] **TASK-027**: Design entity interfaces (TypeScript) - 🟡
-  - [ ] Define Area interface with properties and methods
-  - [ ] Create Goal interface with area relationships
-  - [ ] Design Project interface with goal links
-  - [ ] Define Task interface with project/standalone support
-  - [ ] Create shared entity base interface
+- [x] **TASK-027**: Design entity interfaces (TypeScript) - 🟡
+  - [x] Define Area interface with properties and methods
+  - [x] Create Goal interface with area relationships
+  - [x] Design Project interface with goal links
+  - [x] Define Task interface with project/standalone support
+  - [x] Create shared entity base interface
 - [ ] **TASK-028**: Create Rust structs for entities - 🟡
   - [ ] Define Area struct with serialization
   - [ ] Create Goal struct with area foreign keys

@@ -15,6 +15,33 @@ export interface Area extends BaseEntity {
 }
 
 /**
+ * Area entity with methods for business logic
+ */
+export interface AreaWithMethods extends Area {
+  // Query methods
+  getGoals(): Promise<Goal[]>;
+  getActiveGoals(): Promise<Goal[]>;
+  getCompletedGoals(): Promise<Goal[]>;
+  getAllTasks(): Promise<Task[]>;
+  getTasksByStatus(status: TaskStatus): Promise<Task[]>;
+  
+  // Calculation methods
+  calculateProgress(): number;
+  calculateActiveProjectsCount(): number;
+  calculateCompletedTasksCount(): number;
+  
+  // Validation methods
+  canBeDeleted(): boolean;
+  canBeArchived(): boolean;
+  validate(): string[];
+  
+  // Relationship methods
+  addGoal(goal: Partial<Goal>): Promise<Goal>;
+  removeGoal(goalId: ID): Promise<void>;
+  reorderGoals(goalIds: ID[]): Promise<void>;
+}
+
+/**
  * Goal entity - Belongs to an Area
  */
 export interface Goal extends BaseEntity {
@@ -24,6 +51,40 @@ export interface Goal extends BaseEntity {
   progress: number; // 0-100
   status: 'active' | 'completed' | 'abandoned';
   sortOrder: number;
+}
+
+/**
+ * Goal entity with methods for business logic
+ */
+export interface GoalWithMethods extends Goal {
+  // Query methods
+  getArea(): Promise<Area>;
+  getProjects(): Promise<Project[]>;
+  getActiveProjects(): Promise<Project[]>;
+  getCompletedProjects(): Promise<Project[]>;
+  getAllTasks(): Promise<Task[]>;
+  
+  // Calculation methods
+  calculateProgress(): number;
+  calculateTimeRemaining(): number | null;
+  isOverdue(): boolean;
+  getDaysUntilTarget(): number | null;
+  
+  // Status methods
+  markAsCompleted(): Promise<void>;
+  markAsAbandoned(): Promise<void>;
+  reactivate(): Promise<void>;
+  
+  // Validation methods
+  canBeCompleted(): boolean;
+  canBeDeleted(): boolean;
+  validate(): string[];
+  
+  // Relationship methods
+  addProject(project: Partial<Project>): Promise<Project>;
+  removeProject(projectId: ID): Promise<void>;
+  updateProgress(progress: number): Promise<void>;
+  reorderProjects(projectIds: ID[]): Promise<void>;
 }
 
 /**
@@ -37,6 +98,44 @@ export interface Project extends BaseEntity {
   endDate?: string;
   progress: number; // 0-100
   sortOrder: number;
+}
+
+/**
+ * Project entity with methods for business logic
+ */
+export interface ProjectWithMethods extends Project {
+  // Query methods
+  getGoal(): Promise<Goal>;
+  getTasks(): Promise<Task[]>;
+  getTasksByStatus(status: TaskStatus): Promise<Task[]>;
+  getOverdueTasks(): Promise<Task[]>;
+  getUpcomingTasks(days: number): Promise<Task[]>;
+  
+  // Calculation methods
+  calculateProgress(): number;
+  calculateCompletionPercentage(): number;
+  getEstimatedCompletionDate(): Date | null;
+  isOverdue(): boolean;
+  getDaysRemaining(): number | null;
+  
+  // Status methods
+  start(): Promise<void>;
+  complete(): Promise<void>;
+  cancel(): Promise<void>;
+  putOnHold(): Promise<void>;
+  resume(): Promise<void>;
+  
+  // Validation methods
+  canBeStarted(): boolean;
+  canBeCompleted(): boolean;
+  canBeDeleted(): boolean;
+  validate(): string[];
+  
+  // Relationship methods
+  addTask(task: Partial<Task>): Promise<Task>;
+  removeTask(taskId: ID): Promise<void>;
+  updateProgress(progress: number): Promise<void>;
+  reorderTasks(taskIds: ID[]): Promise<void>;
 }
 
 /**
@@ -61,6 +160,60 @@ export interface Task extends BaseEntity {
 }
 
 /**
+ * Task entity with methods for business logic
+ */
+export interface TaskWithMethods extends Task {
+  // Query methods
+  getProject(): Promise<Project | null>;
+  getParentTask(): Promise<Task | null>;
+  getSubtasks(): Promise<Task[]>;
+  getRecurrenceInstances(): Promise<Task[]>;
+  
+  // Calculation methods
+  isOverdue(): boolean;
+  getDaysUntilDue(): number | null;
+  getTimeSpent(): number;
+  getTimeRemaining(): number | null;
+  hasSubtasks(): boolean;
+  isRecurring(): boolean;
+  isRecurrenceInstance(): boolean;
+  
+  // Status methods
+  start(): Promise<void>;
+  complete(): Promise<void>;
+  cancel(): Promise<void>;
+  reopen(): Promise<void>;
+  
+  // Priority methods
+  setPriority(priority: Task['priority']): Promise<void>;
+  increasePriority(): Promise<void>;
+  decreasePriority(): Promise<void>;
+  
+  // Time tracking methods
+  startTimer(): Promise<void>;
+  stopTimer(): Promise<void>;
+  logTime(minutes: number): Promise<void>;
+  
+  // Recurrence methods
+  createNextInstance(): Promise<Task | null>;
+  updateRecurrenceRule(rule: RecurrenceRule): Promise<void>;
+  deleteRecurrenceSeries(): Promise<void>;
+  detachFromRecurrence(): Promise<void>;
+  
+  // Validation methods
+  canBeCompleted(): boolean;
+  canBeDeleted(): boolean;
+  canHaveSubtasks(): boolean;
+  validate(): string[];
+  
+  // Relationship methods
+  addSubtask(subtask: Partial<Task>): Promise<Task>;
+  removeSubtask(subtaskId: ID): Promise<void>;
+  moveToProject(projectId: ID | null): Promise<void>;
+  convertToProject(): Promise<Project>;
+}
+
+/**
  * Recurrence rule for tasks
  */
 export interface RecurrenceRule {
@@ -79,6 +232,46 @@ export interface RecurrenceRule {
 export type Entity = Area | Goal | Project | Task;
 
 /**
+ * Union type of all entities with methods
+ */
+export type EntityWithMethods = AreaWithMethods | GoalWithMethods | ProjectWithMethods | TaskWithMethods;
+
+/**
  * Entity type string literal union
  */
 export type EntityType = Entity['type'];
+
+/**
+ * Shared entity base interface with common methods
+ */
+export interface BaseEntityMethods {
+  // Persistence methods
+  save(): Promise<void>;
+  delete(): Promise<void>;
+  reload(): Promise<void>;
+  
+  // Metadata methods
+  touch(): Promise<void>;
+  addTag(tag: string): Promise<void>;
+  removeTag(tag: string): Promise<void>;
+  hasTag(tag: string): boolean;
+  
+  // Export methods
+  toMarkdown(): string;
+  toJSON(): Record<string, unknown>;
+  clone(): Promise<Entity>;
+  
+  // History methods
+  getHistory(): Promise<EntityHistory[]>;
+  revertTo(version: string): Promise<void>;
+}
+
+/**
+ * Entity history record
+ */
+export interface EntityHistory {
+  version: string;
+  timestamp: string;
+  changes: Record<string, unknown>;
+  author?: string;
+}
