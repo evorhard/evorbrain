@@ -123,7 +123,11 @@ fn main() {
                         recoverable: false,
                         help_url: None,
                     };
-                    e.with_context(context)
+                    errors::AppError::Database {
+                        source: e,
+                        code: errors::ErrorCode::DatabaseConnection,
+                        context: Some(context),
+                    }
                 })?;
             
             log::info!("Database initialized successfully");
@@ -183,7 +187,7 @@ fn main() {
             commands::update_task_status,
             commands::delete_task,
         ])
-        .on_window_event(|window, event| {
+        .on_window_event(|_window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 log::info!("Window close requested");
                 // Add any cleanup code here

@@ -8,11 +8,19 @@ fn get_filesystem(app_handle: &tauri::AppHandle) -> Result<FileSystem, AppError>
     let app_dir = app_handle
         .path()
         .app_data_dir()
-        .map_err(|e| AppError::Unknown(format!("Failed to get app directory: {}", e)))?;
+        .map_err(|e| AppError::Unknown {
+            message: format!("Failed to get app directory: {}", e),
+            context: None,
+        })?;
     
     let data_dir = app_dir.join("data");
     std::fs::create_dir_all(&data_dir)
-        .map_err(|e| AppError::Io(e))?;
+        .map_err(|e| AppError::Io {
+            source: e,
+            code: crate::errors::ErrorCode::OperationFailed,
+            path: Some(data_dir.to_string_lossy().to_string()),
+            context: None,
+        })?;
     
     Ok(FileSystem::new(data_dir))
 }

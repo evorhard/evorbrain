@@ -1,7 +1,7 @@
-use crate::errors::AppError;
+use crate::errors::{AppError, ErrorCode};
 use crate::models::{Area, Goal, Project, Task, GoalStatus, ProjectStatus, TaskStatus, Priority};
 use rusqlite::{Connection, params, Row};
-use serde::{Deserialize, Serialize};
+// Removed unused imports - serde traits are already derived
 use tauri::Manager;
 use chrono::{DateTime, Utc};
 
@@ -165,7 +165,7 @@ pub async fn create_area(
     }
     
     let area = Area::new(title, description);
-    let mut area = Area { color, icon, ..area };
+    let area = Area { color, icon, ..area };
     
     let conn = get_db_connection(&app_handle)?;
     
@@ -303,9 +303,12 @@ pub async fn delete_area(
     )?;
     
     if goal_count > 0 {
-        return Err(AppError::Validation(
-            "Cannot delete area with associated goals".to_string()
-        ));
+        return Err(AppError::Validation {
+            field: "area_id".to_string(),
+            reason: "Cannot delete area with associated goals".to_string(),
+            code: ErrorCode::InvalidEntityReference,
+            context: None,
+        });
     }
     
     conn.execute("DELETE FROM areas WHERE id = ?1", params![&id])?;
@@ -521,9 +524,12 @@ pub async fn delete_goal(
     )?;
     
     if project_count > 0 {
-        return Err(AppError::Validation(
-            "Cannot delete goal with associated projects".to_string()
-        ));
+        return Err(AppError::Validation {
+            field: "goal_id".to_string(),
+            reason: "Cannot delete goal with associated projects".to_string(),
+            code: ErrorCode::InvalidEntityReference,
+            context: None,
+        });
     }
     
     conn.execute("DELETE FROM goals WHERE id = ?1", params![&id])?;
@@ -662,9 +668,12 @@ pub async fn delete_project(
     )?;
     
     if task_count > 0 {
-        return Err(AppError::Validation(
-            "Cannot delete project with associated tasks".to_string()
-        ));
+        return Err(AppError::Validation {
+            field: "project_id".to_string(),
+            reason: "Cannot delete project with associated tasks".to_string(),
+            code: ErrorCode::InvalidEntityReference,
+            context: None,
+        });
     }
     
     conn.execute("DELETE FROM projects WHERE id = ?1", params![&id])?;
@@ -869,9 +878,12 @@ pub async fn delete_task(
     )?;
     
     if subtask_count > 0 {
-        return Err(AppError::Validation(
-            "Cannot delete task with subtasks".to_string()
-        ));
+        return Err(AppError::Validation {
+            field: "task_id".to_string(),
+            reason: "Cannot delete task with subtasks".to_string(),
+            code: ErrorCode::InvalidEntityReference,
+            context: None,
+        });
     }
     
     conn.execute("DELETE FROM tasks WHERE id = ?1", params![&id])?;

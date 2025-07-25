@@ -133,7 +133,7 @@ pub fn get_file_extension(path: &Path) -> Option<String> {
 }
 
 pub fn is_markdown_file(path: &Path) -> bool {
-    matches!(get_file_extension(path).as_deref(), Some("md") | Some("markdown"))
+    matches!(get_file_extension(path).as_deref(), Some("md" | "markdown"))
 }
 
 pub fn is_hidden_file(path: &Path) -> bool {

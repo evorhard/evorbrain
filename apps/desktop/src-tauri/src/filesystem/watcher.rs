@@ -97,9 +97,8 @@ impl FileWatcher {
                 
                 self.debounce_map.insert(path.clone(), now);
                 return Some(event);
-            } else {
-                return None;
             }
+            return None;
         }
     }
 }

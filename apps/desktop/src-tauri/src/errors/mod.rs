@@ -1,11 +1,11 @@
-use thiserror::Error;
+// Removed unused import - thiserror::Error
 use serde::{Serialize, Deserialize};
-use std::fmt;
+// Removed unused import - std::fmt
 use log::{error, warn};
 use crate::filesystem::FileSystemError;
 
 pub mod utils;
-pub use utils::*;
+// Removed unused import - utils::*
 
 /// Error codes for categorizing errors
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -73,16 +73,14 @@ pub struct ErrorContext {
 }
 
 /// Main application error type
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub enum AppError {
-    #[error("{}", .get_user_message())]
     Database {
         source: rusqlite::Error,
         code: ErrorCode,
         context: Option<ErrorContext>,
     },
     
-    #[error("{}", .get_user_message())]
     Io {
         source: std::io::Error,
         code: ErrorCode,
@@ -90,21 +88,18 @@ pub enum AppError {
         context: Option<ErrorContext>,
     },
     
-    #[error("{}", .get_user_message())]
     Serialization {
         source: serde_json::Error,
         entity_type: String,
         context: Option<ErrorContext>,
     },
     
-    #[error("{}", .get_user_message())]
     EntityNotFound {
         entity_type: String,
         id: String,
         context: Option<ErrorContext>,
     },
     
-    #[error("{}", .get_user_message())]
     Validation {
         field: String,
         reason: String,
@@ -112,14 +107,12 @@ pub enum AppError {
         context: Option<ErrorContext>,
     },
     
-    #[error("{}", .get_user_message())]
     FileSystem {
         source: FileSystemError,
         code: ErrorCode,
         context: Option<ErrorContext>,
     },
     
-    #[error("{}", .get_user_message())]
     Operation {
         message: String,
         code: ErrorCode,
@@ -127,7 +120,6 @@ pub enum AppError {
         context: Option<ErrorContext>,
     },
     
-    #[error("{}", .get_user_message())]
     Unknown {
         message: String,
         context: Option<ErrorContext>,
@@ -313,11 +305,16 @@ impl From<serde_json::Error> for AppError {
 impl From<FileSystemError> for AppError {
     fn from(err: FileSystemError) -> Self {
         let code = match &err {
-            FileSystemError::NotFound(_) => ErrorCode::FileNotFound,
+            FileSystemError::FileNotFound(_) => ErrorCode::FileNotFound,
+            FileSystemError::DirectoryNotFound(_) => ErrorCode::FileNotFound,
             FileSystemError::PermissionDenied(_) => ErrorCode::FilePermissionDenied,
-            FileSystemError::AlreadyExists(_) => ErrorCode::FileAlreadyExists,
-            FileSystemError::InvalidPath(_) => ErrorCode::InvalidPath,
-            FileSystemError::DirectoryNotEmpty(_) => ErrorCode::DirectoryNotEmpty,
+            FileSystemError::PathValidation(_) => ErrorCode::InvalidPath,
+            FileSystemError::Io(io_err) => match io_err.kind() {
+                std::io::ErrorKind::NotFound => ErrorCode::FileNotFound,
+                std::io::ErrorKind::PermissionDenied => ErrorCode::FilePermissionDenied,
+                std::io::ErrorKind::AlreadyExists => ErrorCode::FileAlreadyExists,
+                _ => ErrorCode::OperationFailed,
+            },
             _ => ErrorCode::OperationFailed,
         };
         
@@ -342,7 +339,7 @@ struct SerializedError {
 }
 
 impl serde::Serialize for AppError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -360,7 +357,7 @@ impl serde::Serialize for AppError {
             AppError::Unknown { context, .. } => context,
         };
         
-        let serialized = SerializedError {
+        let error_data = SerializedError {
             code: self.code() as u32,
             message: self.to_string(),
             user_message: self.get_user_message(),
@@ -370,7 +367,7 @@ impl serde::Serialize for AppError {
             help_url: context.as_ref().and_then(|c| c.help_url.clone()),
         };
         
-        serialized.serialize(serializer)
+        error_data.serialize(serializer)
     }
 }
 
@@ -425,6 +422,16 @@ impl AppError {
                 help_url: None,
             }),
         }
+    }
+}
+
+// Implement Error trait manually
+impl std::error::Error for AppError {}
+
+// Implement Display to use get_user_message()
+impl std::fmt::Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_user_message())
     }
 }
 
