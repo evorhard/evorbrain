@@ -193,6 +193,12 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Implement business rule validation
   - [ ] Add cross-entity consistency checks
   - [ ] Create validation error handling
+- [ ] **TASK-034a**: Implement comprehensive test coverage for entities - 🟠
+  - [ ] Create unit tests for Area CRUD operations (>80% coverage)
+  - [ ] Add integration tests for Goal-Area relationships
+  - [ ] Test Project-Goal cascade operations
+  - [ ] Implement Task hierarchy and status transition tests
+  - [ ] Add validation and error handling test cases
 
 ### File Storage System
 
@@ -275,6 +281,12 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Create conflict resolution UI
   - [ ] Implement merge strategies
   - [ ] Add user choice preservation
+- [ ] **TASK-049a**: Implement authentication system - 🟠
+  - [ ] Design authentication state management with Zustand
+  - [ ] Create login/logout functionality and UI
+  - [ ] Implement session persistence and validation
+  - [ ] Add authentication checks to ProtectedRoute component
+  - [ ] Create user profile and settings management
 
 ### Basic UI Components
 
@@ -516,6 +528,21 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Handle tag merge operations
   - [ ] Update all tagged entities
   - [ ] Add merge conflict resolution
+
+### Error Handling Enhancement
+
+- [ ] **TASK-093a**: Replace Rust unwrap() calls with proper error handling - 🟠
+  - [ ] Audit all 67 instances of unwrap()/expect() in Rust code
+  - [ ] Implement Result<T, E> error propagation patterns
+  - [ ] Add context-aware error messages for each failure case
+  - [ ] Create fallback behaviors for recoverable errors
+  - [ ] Test error scenarios to prevent panics
+- [ ] **TASK-093b**: Implement secure error message filtering - 🟡
+  - [ ] Review all error messages for information leakage
+  - [ ] Create user-facing vs. developer error message separation
+  - [ ] Add error message sanitization layer
+  - [ ] Implement error logging with appropriate detail levels
+  - [ ] Test error messages don't expose system internals
 
 ### Keyboard Shortcuts
 
@@ -760,6 +787,12 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Implement worker-based file processing
   - [ ] Create worker communication protocols
   - [ ] Add fallback for worker-unsupported environments
+- [ ] **TASK-132a**: Implement React performance optimizations - 🟡
+  - [ ] Add React.memo to expensive list components
+  - [ ] Implement useMemo for computed values in entity stores
+  - [ ] Add useCallback for event handlers passed to children
+  - [ ] Create performance monitoring dashboard
+  - [ ] Set up bundle size tracking and alerts
 
 ### Testing Suite
 
@@ -770,11 +803,14 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Configure test coverage thresholds
   - [ ] Add test file organization and naming conventions
 - [ ] **TASK-134**: Write unit tests for core logic - 🔴
-  - [ ] Test entity CRUD operations (80%+ coverage)
+  - [ ] Test entity CRUD operations (Target: 80%+ coverage)
   - [ ] Test data validation and transformation
   - [ ] Test state management store operations
   - [ ] Test utility functions and helpers
   - [ ] Test plugin system core functionality
+  - [ ] Test filesystem validation and security functions
+  - [ ] Test error handling and recovery paths
+  - [ ] Test search indexing and query operations
 - [ ] **TASK-135**: Create integration tests - 🟠
   - [ ] Test frontend-backend IPC communication
   - [ ] Test file system operations end-to-end
@@ -805,6 +841,12 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Add coverage badges and metrics
   - [ ] Create coverage exclusion rules
   - [ ] Set minimum coverage thresholds per module
+- [ ] **TASK-139a**: Complete FSD architecture implementation - 🟡
+  - [ ] Create missing entities folder structure
+  - [ ] Organize existing entity components into FSD pattern
+  - [ ] Implement shared UI components library
+  - [ ] Add process layer for complex workflows
+  - [ ] Update import paths to follow FSD conventions
 
 ### Security Hardening
 
@@ -895,6 +937,13 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Add high contrast and reduced motion support
   - [ ] Create screen reader optimizations
   - [ ] Add accessibility testing automation
+- [ ] **TASK-153a**: Complete unimplemented UI pages - 🟠
+  - [ ] Implement Area detail page with full CRUD
+  - [ ] Create Goal detail page with progress tracking
+  - [ ] Build Project detail page with task management
+  - [ ] Implement Task detail page with rich editing
+  - [ ] Create Search page with advanced filters
+  - [ ] Remove TODO placeholders from router
 
 ### Documentation
 
@@ -940,6 +989,12 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Create pull request templates
   - [ ] Document development environment setup
   - [ ] Add recognition and credit system
+- [ ] **TASK-160a**: Update technical documentation - 🟡
+  - [ ] Add comprehensive JSDoc comments to all public APIs
+  - [ ] Update CLAUDE.md with latest architecture changes
+  - [ ] Document state management patterns and best practices
+  - [ ] Create security guidelines and threat model
+  - [ ] Add performance optimization guide
 
 ## Phase 6: Release Tasks
 
@@ -1020,6 +1075,12 @@ This document provides a granular breakdown of development tasks organized by ph
   - [ ] Set up CDN distribution for downloads
   - [ ] Create download page generation
   - [ ] Add download statistics tracking
+- [ ] **TASK-172a**: Implement pre-release quality gates - 🟡
+  - [ ] Set up automated security scanning in CI/CD
+  - [ ] Add minimum test coverage enforcement (80%)
+  - [ ] Create bundle size limits and checks
+  - [ ] Implement performance regression detection
+  - [ ] Add release readiness dashboard
 
 ### Marketing & Community
 
