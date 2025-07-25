@@ -32,10 +32,10 @@ description: 'Professional growth and career advancement'
 color: '#FF6B6B'
 icon: 'briefcase'
 status: active
+tags: ['work', 'professional']
+sort_order: 1
 created_at: 2025-07-01T00:00:00Z
 updated_at: 2025-07-01T00:00:00Z
-order: 1
-tags: ['work', 'professional']
 metadata:
   custom_field: 'value'
 ---
@@ -48,15 +48,15 @@ metadata:
 
 - `id`: Unique identifier with `area_` prefix
 - `type`: Always "area" for areas
-- `title`: Display name (required)
-- `description`: Brief description
-- `color`: Hex color for UI display
-- `icon`: Icon identifier for UI
-- `status`: active | archived | deleted
+- `title`: Display name (required, max 200 chars)
+- `description`: Brief description (optional)
+- `color`: Hex color for UI display (optional)
+- `icon`: Icon identifier for UI (optional)
+- `status`: active | archived
+- `tags`: Array of string tags
+- `sort_order`: Integer for display ordering
 - `created_at`: ISO 8601 timestamp
 - `updated_at`: ISO 8601 timestamp
-- `order`: Sort order for display
-- `tags`: Array of string tags
 - `metadata`: Object for custom fields
 
 ### Goal
@@ -96,16 +96,17 @@ metadata:
 - `id`: Unique identifier with `goal_` prefix
 - `type`: Always "goal" for goals
 - `area_id`: Reference to parent area (required)
-- `title`: Goal title (required)
-- `description`: Goal description
-- `status`: not_started | in_progress | completed | abandoned
-- `priority`: low | medium | high
-- `target_date`: Target completion date (ISO 8601)
+- `title`: Goal title (required, max 200 chars)
+- `description`: Goal description (optional)
+- `status`: not-started | in-progress | completed | abandoned
+- `priority`: low | medium | high | urgent
+- `target_date`: Target completion date (ISO 8601, optional)
 - `progress`: Percentage (0-100)
+- `tags`: Array of string tags
+- `sort_order`: Integer for display ordering
 - `created_at`: ISO 8601 timestamp
 - `updated_at`: ISO 8601 timestamp
 - `completed_at`: Completion timestamp (nullable)
-- `tags`: Array of string tags
 - `metadata`: Custom fields and milestones
 
 ### Project
@@ -148,17 +149,18 @@ metadata:
 - `id`: Unique identifier with `project_` prefix
 - `type`: Always "project" for projects
 - `goal_id`: Reference to parent goal (required)
-- `title`: Project title (required)
-- `description`: Project description
-- `status`: planning | active | on_hold | completed | cancelled
-- `priority`: low | medium | high
-- `start_date`: Project start date
-- `due_date`: Project deadline
+- `title`: Project title (required, max 200 chars)
+- `description`: Project description (optional)
+- `status`: planning | active | on-hold | completed | cancelled
+- `priority`: low | medium | high | urgent
+- `start_date`: Project start date (ISO 8601, optional)
+- `due_date`: Project deadline (ISO 8601, optional)
 - `progress`: Percentage (0-100)
+- `tags`: Array of string tags
+- `sort_order`: Integer for display ordering
 - `created_at`: ISO 8601 timestamp
 - `updated_at`: ISO 8601 timestamp
 - `completed_at`: Completion timestamp (nullable)
-- `tags`: Array of string tags
 - `metadata`: Custom fields, deliverables, time tracking
 
 ### Task
@@ -205,20 +207,22 @@ metadata:
 
 - `id`: Unique identifier with `task_` prefix
 - `type`: Always "task" for tasks
-- `project_id`: Reference to parent project (nullable)
-- `title`: Task title (required)
-- `description`: Task description
-- `status`: todo | in_progress | completed | cancelled
-- `priority`: low | medium | high
-- `due_date`: Due date and time (ISO 8601)
-- `estimated_duration`: Estimated minutes
-- `actual_duration`: Actual minutes spent
-- `completed_at`: Completion timestamp
-- `recurrence`: Recurrence rule (see below)
+- `project_id`: Reference to parent project (nullable for standalone tasks)
+- `title`: Task title (required, max 200 chars)
+- `description`: Task description (optional)
+- `status`: not-started | in-progress | completed | cancelled
+- `priority`: low | medium | high | urgent
+- `due_date`: Due date and time (ISO 8601, optional)
+- `tags`: Array of string tags
+- `sort_order`: Integer for display ordering
+- `progress`: Percentage (0-100)
+- `estimated_duration`: Estimated minutes (optional)
+- `actual_duration`: Actual minutes spent (optional)
+- `recurrence`: Recurrence rule (see below, optional)
 - `created_at`: ISO 8601 timestamp
 - `updated_at`: ISO 8601 timestamp
-- `tags`: Array of string tags
-- `checklist`: Array of subtask objects
+- `completed_at`: Completion timestamp (nullable)
+- `checklist`: Array of subtask objects (optional)
 - `metadata`: Custom fields (context, energy, etc.)
 
 ### Recurrence Schema
@@ -268,20 +272,80 @@ The system automatically tracks backlinks when entities reference each other, st
 ### Core Tables
 
 ```sql
--- Entity metadata table (mirrors frontmatter)
-CREATE TABLE entities (
+-- Areas table
+CREATE TABLE IF NOT EXISTS areas (
     id TEXT PRIMARY KEY,
-    type TEXT NOT NULL CHECK (type IN ('area', 'goal', 'project', 'task')),
     title TEXT NOT NULL,
     description TEXT,
-    status TEXT NOT NULL,
-    parent_id TEXT,
-    file_path TEXT NOT NULL UNIQUE,
-    frontmatter JSON NOT NULL,  -- Full YAML frontmatter as JSON
-    content_hash TEXT NOT NULL,  -- SHA-256 of file content
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
-    indexed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    status TEXT NOT NULL DEFAULT 'active',
+    color TEXT,
+    icon TEXT,
+    tags TEXT,
+    sort_order INTEGER DEFAULT 0,
+    metadata TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+-- Goals table
+CREATE TABLE IF NOT EXISTS goals (
+    id TEXT PRIMARY KEY,
+    area_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'not-started',
+    priority TEXT DEFAULT 'medium',
+    target_date TEXT,
+    progress INTEGER DEFAULT 0,
+    tags TEXT,
+    sort_order INTEGER DEFAULT 0,
+    metadata TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    completed_at TEXT,
+    FOREIGN KEY (area_id) REFERENCES areas(id)
+);
+
+-- Projects table
+CREATE TABLE IF NOT EXISTS projects (
+    id TEXT PRIMARY KEY,
+    goal_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'planning',
+    priority TEXT DEFAULT 'medium',
+    start_date TEXT,
+    due_date TEXT,
+    progress INTEGER DEFAULT 0,
+    tags TEXT,
+    sort_order INTEGER DEFAULT 0,
+    metadata TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    completed_at TEXT,
+    FOREIGN KEY (goal_id) REFERENCES goals(id)
+);
+
+-- Tasks table
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    project_id TEXT,
+    title TEXT NOT NULL,
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'not-started',
+    priority TEXT DEFAULT 'medium',
+    due_date TEXT,
+    tags TEXT,
+    sort_order INTEGER DEFAULT 0,
+    progress INTEGER DEFAULT 0,
+    estimated_duration INTEGER,
+    actual_duration INTEGER,
+    recurrence TEXT,
+    metadata TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    completed_at TEXT,
+    FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
 -- Relationships table

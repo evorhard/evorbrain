@@ -420,6 +420,20 @@ interface MigrationPipeline {
 **Decision**: Implement comprehensive CRUD operations with validation, cascade checking, and detailed error messages  
 **Consequences**: Consistent API across entities, better user experience, safer data operations, easier debugging
 
+### ADR-012: Tags as JSON Strings
+
+**Status**: Accepted  
+**Context**: Need to store array of tags in SQLite which doesn't have native array support  
+**Decision**: Store tags as JSON-serialized strings in the database, serialize/deserialize at the boundary  
+**Consequences**: Simple storage model, easy querying with JSON functions, consistent with metadata approach
+
+### ADR-013: Sort Order for Entity Ordering
+
+**Status**: Accepted  
+**Context**: Need user-controlled ordering of entities within their hierarchical containers  
+**Decision**: Add sort_order integer field to all entities for manual ordering control  
+**Consequences**: Flexible user-defined ordering, simple to implement drag-and-drop reordering, predictable display order
+
 ## Risk Analysis
 
 ### Technical Risks
@@ -437,6 +451,25 @@ interface MigrationPipeline {
 2. **Extensive Testing**: Automated test suite
 3. **Gradual Rollout**: Beta testing program
 4. **Monitoring**: Error tracking, analytics
+
+## Migration Notes
+
+### Entity Schema Updates
+
+For existing development databases after entity implementation:
+
+1. The schema will be automatically updated on next application start
+2. Existing entities will have default values for new fields:
+   - `tags`: empty array `[]`
+   - `sort_order`: 0
+   - `progress`: 0 (for Goals, Projects, Tasks)
+
+### Field Storage Patterns
+
+- **Tags**: Stored as JSON-serialized arrays in SQLite
+- **Metadata**: Stored as JSON objects for extensibility
+- **Dates**: ISO 8601 format strings
+- **Status**: String enums with validation
 
 ## Future Considerations
 
