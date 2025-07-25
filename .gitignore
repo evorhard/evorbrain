@@ -1,6 +1,11 @@
 # EvorBrain - Comprehensive .gitignore
 # Tauri + React + TypeScript + pnpm monorepo
 
+# Temporary documentation files
+CLEANUP_SUMMARY.md
+DOCUMENTATION_UPDATE_SUMMARY.md
+RECENT_CHANGES.md
+
 # Dependencies
 node_modules/
 .pnpm-store/
