@@ -399,6 +399,13 @@ interface MigrationPipeline {
 **Decision**: Implement full CRUD operations for all entities via Tauri commands  
 **Consequences**: Type-safe IPC, consistent error handling, async operations
 
+### ADR-009: Structured Error Handling System
+
+**Status**: Accepted  
+**Context**: Need consistent, user-friendly error handling across the application  
+**Decision**: Implement rich error types with codes, severity levels, and recovery suggestions  
+**Consequences**: Better user experience, easier debugging, consistent error reporting
+
 ## Risk Analysis
 
 ### Technical Risks

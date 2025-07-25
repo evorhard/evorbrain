@@ -2,6 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::Manager;
+use env_logger::{Builder, Target};
+use log::LevelFilter;
+use std::io::Write;
 
 mod commands;
 mod database;
@@ -9,6 +12,41 @@ mod errors;
 mod filesystem;
 mod models;
 mod utils;
+
+/// Set up logging with appropriate configuration
+fn setup_logging() {
+    let mut builder = Builder::from_default_env();
+    
+    builder
+        .target(Target::Stdout)
+        .filter_level(LevelFilter::Info)
+        .filter_module("evorbrain", LevelFilter::Debug)
+        .format(|buf, record| {
+            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+            let level = record.level();
+            let target = record.target();
+            let message = record.args();
+            
+            // Color coding for different log levels
+            let level_str = match level {
+                log::Level::Error => format!("\x1b[31m{}\x1b[0m", level), // Red
+                log::Level::Warn => format!("\x1b[33m{}\x1b[0m", level),  // Yellow
+                log::Level::Info => format!("\x1b[32m{}\x1b[0m", level),  // Green
+                log::Level::Debug => format!("\x1b[36m{}\x1b[0m", level), // Cyan
+                log::Level::Trace => format!("\x1b[35m{}\x1b[0m", level), // Magenta
+            };
+            
+            writeln!(
+                buf,
+                "[{}] {} {} - {}",
+                timestamp,
+                level_str,
+                target,
+                message
+            )
+        })
+        .init();
+}
 
 fn main() {
     // Check if we're running tests
@@ -18,21 +56,77 @@ fn main() {
     }
 
     // Initialize logging
-    env_logger::init();
+    setup_logging();
 
     tauri::Builder::default()
         .setup(|app| {
+            log::info!("Starting EvorBrain application");
+            
             // Initialize database on app startup
             let app_handle = app.handle();
-            let app_dir = app_handle.path().app_data_dir().unwrap();
+            let app_dir = app_handle.path().app_data_dir()
+                .map_err(|e| {
+                    let err = errors::AppError::Operation {
+                        message: format!("Failed to get app data directory: {}", e),
+                        code: errors::ErrorCode::OperationFailed,
+                        severity: errors::ErrorSeverity::Critical,
+                        context: Some(errors::ErrorContext {
+                            user_action: "Starting application".to_string(),
+                            recovery_suggestions: vec![
+                                "Check if the application has permission to access its data directory".to_string(),
+                                "Try reinstalling the application".to_string(),
+                            ],
+                            recoverable: false,
+                            help_url: None,
+                        }),
+                    };
+                    err.log();
+                    err
+                })?;
+            
+            log::info!("App data directory: {:?}", app_dir);
             
             // Ensure app directory exists
-            std::fs::create_dir_all(&app_dir).expect("Failed to create app directory");
+            std::fs::create_dir_all(&app_dir)
+                .map_err(|e| {
+                    let err = errors::AppError::Io {
+                        source: e,
+                        code: errors::ErrorCode::OperationFailed,
+                        path: Some(app_dir.display().to_string()),
+                        context: Some(errors::ErrorContext {
+                            user_action: "Creating application data directory".to_string(),
+                            recovery_suggestions: vec![
+                                "Check if you have write permissions to the directory".to_string(),
+                                "Ensure there is enough disk space".to_string(),
+                            ],
+                            recoverable: false,
+                            help_url: None,
+                        }),
+                    };
+                    err.log();
+                    err
+                })?;
             
             // Initialize database
             let db_path = app_dir.join("evorbrain.db");
-            database::init_database(&db_path)?;
+            log::info!("Initializing database at: {:?}", db_path);
             
+            database::init_database(&db_path)
+                .map_err(|e| {
+                    let context = errors::ErrorContext {
+                        user_action: "Initializing database".to_string(),
+                        recovery_suggestions: vec![
+                            "Try deleting the database file and restarting".to_string(),
+                            "Check if the database file is corrupted".to_string(),
+                            "Ensure you have write permissions to the data directory".to_string(),
+                        ],
+                        recoverable: false,
+                        help_url: None,
+                    };
+                    e.with_context(context)
+                })?;
+            
+            log::info!("Database initialized successfully");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -41,6 +135,7 @@ fn main() {
             commands::test_database,
             commands::search,
             commands::test_fts,
+            commands::test_error_handling,
             
             // File system commands
             commands::read_file,
@@ -88,8 +183,16 @@ fn main() {
             commands::update_task_status,
             commands::delete_task,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                log::info!("Window close requested");
+                // Add any cleanup code here
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+    
+    log::info!("EvorBrain application shutting down");
 }
 
 fn test_database_operations() {

@@ -16,6 +16,57 @@ pub fn greet(name: &str) -> String {
     format!("Hello, {}! Welcome to EvorBrain.", name)
 }
 
+// Test command to demonstrate error handling
+#[tauri::command]
+pub async fn test_error_handling(error_type: String) -> Result<String, crate::errors::AppError> {
+    use crate::errors::{AppError, ErrorCode, ErrorContext, ErrorSeverity};
+    
+    match error_type.as_str() {
+        "validation" => {
+            Err(AppError::missing_field("test_field"))
+        },
+        "not_found" => {
+            Err(AppError::entity_not_found("test_entity", "test-id-123"))
+        },
+        "database" => {
+            Err(AppError::Operation {
+                message: "Database connection failed".to_string(),
+                code: ErrorCode::DatabaseConnection,
+                severity: ErrorSeverity::Critical,
+                context: Some(ErrorContext {
+                    user_action: "Testing database connection".to_string(),
+                    recovery_suggestions: vec![
+                        "Check if the database file exists".to_string(),
+                        "Verify file permissions".to_string(),
+                        "Try restarting the application".to_string(),
+                    ],
+                    recoverable: false,
+                    help_url: Some("https://evorbrain.dev/help/database-errors".to_string()),
+                }),
+            })
+        },
+        "file" => {
+            Err(AppError::Io {
+                source: std::io::Error::new(std::io::ErrorKind::NotFound, "Test file not found"),
+                code: ErrorCode::FileNotFound,
+                path: Some("/path/to/test/file.md".to_string()),
+                context: Some(ErrorContext {
+                    user_action: "Reading file".to_string(),
+                    recovery_suggestions: vec![
+                        "Check if the file exists".to_string(),
+                        "Verify the file path is correct".to_string(),
+                    ],
+                    recoverable: true,
+                    help_url: None,
+                }),
+            })
+        },
+        _ => {
+            Ok("No error - test successful!".to_string())
+        }
+    }
+}
+
 #[tauri::command]
 pub fn test_database(app_handle: tauri::AppHandle) -> Result<String, String> {
     // Get the database path

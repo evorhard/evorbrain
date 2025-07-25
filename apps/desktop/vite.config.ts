@@ -1,3 +1,5 @@
+import { resolve } from 'path';
+
 import react from '@vitejs/plugin-react-swc';
 import { defineConfig } from 'vite';
 
@@ -10,4 +12,9 @@ export default defineConfig({
     strictPort: true,
   },
   envPrefix: ['VITE_', 'TAURI_'],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+    },
+  },
 });

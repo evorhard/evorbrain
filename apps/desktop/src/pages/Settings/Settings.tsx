@@ -9,8 +9,11 @@ import {
   IconCheck,
   IconX,
   IconSearch,
+  IconBug,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+
+import { ErrorTestPanel } from '../../features/error-testing';
 
 function Settings() {
   const [databaseTestResult, setDatabaseTestResult] = useState<string | null>(null);
@@ -69,6 +72,9 @@ function Settings() {
           </Tabs.Tab>
           <Tabs.Tab leftSection={<IconPlug size={16} />} value="plugins">
             Plugins
+          </Tabs.Tab>
+          <Tabs.Tab leftSection={<IconBug size={16} />} value="developer">
+            Developer
           </Tabs.Tab>
         </Tabs.List>
 
@@ -163,6 +169,21 @@ function Settings() {
           <Paper mt="md" p="md">
             <Text>Plugin management will be implemented in Phase 4.</Text>
           </Paper>
+        </Tabs.Panel>
+
+        <Tabs.Panel pt="xs" value="developer">
+          <Stack gap="md" mt="md">
+            <ErrorTestPanel />
+
+            <Card padding="lg" shadow="sm">
+              <Title className="mb-4" order={3}>
+                Developer Tools
+              </Title>
+              <Text c="dimmed" size="sm">
+                Additional developer tools and debugging features will be added here.
+              </Text>
+            </Card>
+          </Stack>
         </Tabs.Panel>
       </Tabs>
     </div>

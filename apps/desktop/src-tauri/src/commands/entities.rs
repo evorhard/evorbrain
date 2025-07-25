@@ -10,10 +10,35 @@ fn get_db_connection(app_handle: &tauri::AppHandle) -> Result<Connection, AppErr
     let app_dir = app_handle
         .path()
         .app_data_dir()
-        .map_err(|e| AppError::Unknown(format!("Failed to get app directory: {}", e)))?;
+        .map_err(|e| AppError::Operation {
+            message: format!("Failed to get app directory: {}", e),
+            code: crate::errors::ErrorCode::OperationFailed,
+            severity: crate::errors::ErrorSeverity::Error,
+            context: Some(crate::errors::ErrorContext {
+                user_action: "Accessing database".to_string(),
+                recovery_suggestions: vec![
+                    "Ensure the application has proper permissions".to_string(),
+                ],
+                recoverable: false,
+                help_url: None,
+            }),
+        })?;
     let db_path = app_dir.join("evorbrain.db");
     
-    Connection::open(&db_path).map_err(|e| AppError::Database(e))
+    Connection::open(&db_path)
+        .map_err(|e| {
+            let err = AppError::from(e);
+            err.with_context(crate::errors::ErrorContext {
+                user_action: "Opening database connection".to_string(),
+                recovery_suggestions: vec![
+                    "Check if the database file exists".to_string(),
+                    "Verify file permissions".to_string(),
+                    "Try restarting the application".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            })
+        })
 }
 
 // Helper functions to parse database rows
@@ -118,6 +143,27 @@ pub async fn create_area(
     color: Option<String>,
     icon: Option<String>,
 ) -> Result<Area, AppError> {
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: crate::errors::ErrorCode::ValueOutOfRange,
+            context: Some(crate::errors::ErrorContext {
+                user_action: "Creating area".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
     let area = Area::new(title, description);
     let mut area = Area { color, icon, ..area };
     
@@ -135,8 +181,38 @@ pub async fn create_area(
             area.created_at.to_rfc3339(),
             area.updated_at.to_rfc3339(),
         ],
-    )?;
+    ).map_err(|e| {
+        log::error!("Failed to create area: {}", e);
+        match &e {
+            rusqlite::Error::SqliteFailure(err, _) if err.code == rusqlite::ErrorCode::ConstraintViolation => {
+                AppError::Operation {
+                    message: "An area with this ID already exists".to_string(),
+                    code: crate::errors::ErrorCode::EntityAlreadyExists,
+                    severity: crate::errors::ErrorSeverity::Warning,
+                    context: Some(crate::errors::ErrorContext {
+                        user_action: "Creating area".to_string(),
+                        recovery_suggestions: vec![
+                            "Try using a different title".to_string(),
+                            "This might be a temporary issue, please try again".to_string(),
+                        ],
+                        recoverable: true,
+                        help_url: None,
+                    }),
+                }
+            },
+            _ => AppError::from(e).with_context(crate::errors::ErrorContext {
+                user_action: "Creating area".to_string(),
+                recovery_suggestions: vec![
+                    "Check if the database is accessible".to_string(),
+                    "Try restarting the application".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        }
+    })?;
     
+    log::info!("Created area with ID: {}", area.id);
     Ok(area)
 }
 
@@ -152,7 +228,18 @@ pub async fn get_area(
          FROM areas WHERE id = ?1",
         params![&id],
         parse_area,
-    )?;
+    ).map_err(|e| {
+        match e {
+            rusqlite::Error::QueryReturnedNoRows => {
+                log::debug!("Area not found with ID: {}", id);
+                AppError::entity_not_found("area", &id)
+            },
+            _ => {
+                log::error!("Failed to get area {}: {}", id, e);
+                AppError::from(e)
+            }
+        }
+    })?;
     
     Ok(area)
 }
