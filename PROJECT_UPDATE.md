@@ -4,7 +4,7 @@
 
 I'm excited to announce that **Phase 1: Foundation** of the EvorBrain project is now complete!
 
-### What We've Accomplished
+### What I've Accomplished
 
 The foundation phase has established a solid technical base for the project:
 
@@ -43,7 +43,7 @@ The foundation phase has established a solid technical base for the project:
 
 ### What's Next: Phase 2 - Core Features
 
-We're now moving into Phase 2, where we'll implement the core knowledge management features:
+I'm now moving into Phase 2, where I'll implement the core knowledge management features:
 
 - **Data Model Implementation**: Areas → Goals → Projects → Tasks hierarchy
 - **File Storage System**: Markdown files with YAML frontmatter
@@ -53,14 +53,14 @@ We're now moving into Phase 2, where we'll implement the core knowledge manageme
 
 ### What's Next
 
-We're moving forward with Phase 2 development at a steady pace, focusing on quality over speed.
+I'm moving forward with Phase 2 development at a steady pace, focusing on quality over speed.
 
 ### How You Can Help
 
 - **Star the repository** to show your support
-- **Watch for updates** as we progress through Phase 2
+- **Watch for updates** as I progress through Phase 2
 - **Join the discussions** to share ideas and feedback
-- **Test early builds** once we have the core features implemented
+- **Test early builds** once I have the core features implemented
 
 ### Technical Details
 
@@ -73,7 +73,7 @@ For those interested in the technical implementation:
 
 Thank you to everyone following the project! The foundation is solid, and I'm excited to start building the actual features that will make EvorBrain a powerful knowledge management tool.
 
-Stay tuned for more updates as we progress through Phase 2!
+Stay tuned for more updates as I progress through Phase 2!
 
 ---
 
