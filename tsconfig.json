@@ -11,7 +11,6 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -22,13 +21,7 @@
       "@evorbrain/*": ["packages/*/src", "apps/*/src"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "src-tauri"
-  ],
+  "exclude": ["node_modules", "dist", "build", "coverage", "src-tauri"],
   "references": [
     { "path": "./packages/types" },
     { "path": "./packages/core" },

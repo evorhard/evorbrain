@@ -17,6 +17,7 @@
     "format": "prettier --write \"src/**/*.d.ts\"",
     "format:check": "prettier --check \"src/**/*.d.ts\"",
     "typecheck": "tsc --noEmit",
+    "build": "tsc",
     "analyze": "pnpm run lint && pnpm run typecheck && pnpm run format:check",
     "clean": "rm -rf node_modules .turbo"
   },
