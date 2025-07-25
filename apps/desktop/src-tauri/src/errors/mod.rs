@@ -1,4 +1,5 @@
 use thiserror::Error;
+use crate::filesystem::FileSystemError;
 
 #[derive(Error, Debug)]
 pub enum AppError {
@@ -16,6 +17,9 @@ pub enum AppError {
     
     #[error("Validation error: {0}")]
     Validation(String),
+    
+    #[error("FileSystem error: {0}")]
+    FileSystem(#[from] FileSystemError),
     
     #[error("Unknown error: {0}")]
     Unknown(String),

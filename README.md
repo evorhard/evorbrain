@@ -141,6 +141,11 @@ EvorBrain will be a powerful, customizable personal knowledge management system 
       <td><strong>File System Abstraction</strong></td>
       <td>✅ Complete</td>
     </tr>
+    <tr>
+      <td align="center">🔌</td>
+      <td><strong>Basic IPC Commands</strong></td>
+      <td>✅ Complete</td>
+    </tr>
   </table>
 </div>
 

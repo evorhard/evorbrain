@@ -392,6 +392,13 @@ interface MigrationPipeline {
 **Decision**: Use SQLite FTS5 extension for search indexing  
 **Consequences**: Fast search performance, complex query support, minimal setup
 
+### ADR-008: Comprehensive IPC Command Structure
+
+**Status**: Accepted  
+**Context**: Need robust communication between frontend and backend  
+**Decision**: Implement full CRUD operations for all entities via Tauri commands  
+**Consequences**: Type-safe IPC, consistent error handling, async operations
+
 ## Risk Analysis
 
 ### Technical Risks

@@ -1,8 +1,15 @@
 // Tauri command handlers
 
+pub mod filesystem;
+pub mod entities;
+
 use rusqlite::Connection;
 use tauri::Manager;
 use crate::database::search::{search_entities, test_fts5, SearchResult};
+
+// Re-export all commands
+pub use filesystem::*;
+pub use entities::*;
 
 #[tauri::command]
 pub fn greet(name: &str) -> String {

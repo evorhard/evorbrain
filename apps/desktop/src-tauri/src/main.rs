@@ -36,11 +36,57 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            // Add command handlers here
+            // Basic commands
             commands::greet,
             commands::test_database,
             commands::search,
             commands::test_fts,
+            
+            // File system commands
+            commands::read_file,
+            commands::write_file,
+            commands::delete_file,
+            commands::list_directory,
+            commands::get_file_metadata,
+            commands::file_exists,
+            commands::create_directory,
+            commands::copy_file,
+            commands::move_file,
+            
+            // Entity commands - Areas
+            commands::create_area,
+            commands::get_area,
+            commands::get_all_areas,
+            commands::update_area,
+            commands::delete_area,
+            
+            // Entity commands - Goals
+            commands::create_goal,
+            commands::get_goal,
+            commands::get_all_goals,
+            commands::get_goals_by_area,
+            commands::update_goal,
+            commands::delete_goal,
+            
+            // Entity commands - Projects
+            commands::create_project,
+            commands::get_project,
+            commands::get_all_projects,
+            commands::get_projects_by_goal,
+            commands::update_project,
+            commands::delete_project,
+            
+            // Entity commands - Tasks
+            commands::create_task,
+            commands::get_task,
+            commands::get_all_tasks,
+            commands::get_tasks_by_project,
+            commands::get_tasks_by_status,
+            commands::get_upcoming_tasks,
+            commands::get_subtasks,
+            commands::update_task,
+            commands::update_task_status,
+            commands::delete_task,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

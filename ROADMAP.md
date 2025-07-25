@@ -29,6 +29,7 @@ Establish project structure and core architecture
 - [x] SQLite integration with Rust backend
 - [x] SQLite FTS5 full-text search implementation
 - [x] File system operations for markdown storage
+- [x] Basic IPC commands for entity CRUD operations
 
 ### Deliverables
 

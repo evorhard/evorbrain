@@ -102,6 +102,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented utilities for filename sanitization and generation
   - Added support for backup files and metadata operations
   - Integrated with Tauri's security model to prevent path traversal
+- Basic IPC commands implementation:
+  - Created comprehensive Tauri command structure for all entity types
+  - Implemented CRUD operations for Areas, Goals, Projects, and Tasks
+  - Added entity query commands: get single, get all, get by parent
+  - Implemented task filtering commands (by status, upcoming, subtasks)
+  - Added proper error handling with AppError type
+  - Integrated all commands with SQLite database operations
 
 ### Changed
 

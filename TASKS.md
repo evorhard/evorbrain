@@ -136,11 +136,11 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Add file watching and change detection
   - [x] Create file path utilities and validation
   - [x] Implement atomic file operations
-- [ ] **TASK-025**: Implement basic IPC commands - 🟡
-  - [ ] Create Tauri command structure
-  - [ ] Implement file system commands
-  - [ ] Add database query commands
-  - [ ] Set up command error handling
+- [x] **TASK-025**: Implement basic IPC commands - 🟡
+  - [x] Create Tauri command structure
+  - [x] Implement file system commands
+  - [x] Add database query commands
+  - [x] Set up command error handling
 - [ ] **TASK-026**: Set up error handling patterns - 🟡
   - [ ] Create custom error types and enums
   - [ ] Implement error conversion and propagation
