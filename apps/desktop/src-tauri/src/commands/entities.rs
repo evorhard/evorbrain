@@ -266,8 +266,8 @@ pub async fn get_all_areas(
     let conn = get_db_connection(&app_handle)?;
     
     let mut stmt = conn.prepare(
-        "SELECT id, title, description, color, icon, created_at, updated_at 
-         FROM areas ORDER BY title"
+        "SELECT id, title, description, color, icon, created_at, updated_at, sort_order, tags 
+         FROM areas ORDER BY sort_order, title"
     )?;
     
     let areas = stmt.query_map([], parse_area)?
@@ -284,22 +284,66 @@ pub async fn update_area(
     description: Option<String>,
     color: Option<String>,
     icon: Option<String>,
+    sort_order: Option<i32>,
+    tags: Option<Vec<String>>,
 ) -> Result<Area, AppError> {
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: crate::errors::ErrorCode::ValueOutOfRange,
+            context: Some(crate::errors::ErrorContext {
+                user_action: "Updating area".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
     let conn = get_db_connection(&app_handle)?;
+    
+    // Get existing area to preserve fields that aren't being updated
+    let existing_area = get_area(app_handle.clone(), id.clone()).await?;
+    
+    let final_sort_order = sort_order.unwrap_or(existing_area.sort_order);
+    let final_tags = tags.or(existing_area.tags);
+    let tags_json = final_tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
     
     conn.execute(
         "UPDATE areas SET title = ?1, description = ?2, color = ?3, icon = ?4, 
-         updated_at = ?5 WHERE id = ?6",
+         updated_at = ?5, sort_order = ?6, tags = ?7 WHERE id = ?8",
         params![
             &title,
             &description,
             &color,
             &icon,
             Utc::now().to_rfc3339(),
+            final_sort_order,
+            &tags_json,
             &id,
         ],
-    )?;
+    ).map_err(|e| {
+        log::error!("Failed to update area {}: {}", id, e);
+        AppError::from(e).with_context(crate::errors::ErrorContext {
+            user_action: "Updating area".to_string(),
+            recovery_suggestions: vec![
+                "Check if the area exists".to_string(),
+                "Try refreshing and attempting the update again".to_string(),
+            ],
+            recoverable: true,
+            help_url: None,
+        })
+    })?;
     
+    log::info!("Updated area with ID: {}", id);
     get_area(app_handle, id).await
 }
 
@@ -310,24 +354,62 @@ pub async fn delete_area(
 ) -> Result<(), AppError> {
     let conn = get_db_connection(&app_handle)?;
     
+    // First check if the area exists
+    let area_exists = conn.query_row(
+        "SELECT 1 FROM areas WHERE id = ?1",
+        params![&id],
+        |_| Ok(()),
+    ).is_ok();
+    
+    if !area_exists {
+        return Err(AppError::entity_not_found("area", &id));
+    }
+    
     // Check if area has any goals
     let goal_count: i32 = conn.query_row(
         "SELECT COUNT(*) FROM goals WHERE area_id = ?1",
         params![&id],
         |row| row.get(0),
-    )?;
+    ).map_err(|e| {
+        log::error!("Failed to check goals for area {}: {}", id, e);
+        AppError::from(e)
+    })?;
     
     if goal_count > 0 {
         return Err(AppError::Validation {
             field: "area_id".to_string(),
-            reason: "Cannot delete area with associated goals".to_string(),
+            reason: format!("Cannot delete area with {} associated goal(s). Please delete or reassign the goals first.", goal_count),
             code: ErrorCode::InvalidEntityReference,
-            context: None,
+            context: Some(crate::errors::ErrorContext {
+                user_action: "Deleting area".to_string(),
+                recovery_suggestions: vec![
+                    "Delete all goals associated with this area first".to_string(),
+                    "Move the goals to a different area before deleting".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
         });
     }
     
-    conn.execute("DELETE FROM areas WHERE id = ?1", params![&id])?;
+    // Also check for any standalone tasks that might be associated with the area
+    // (tasks without projects but conceptually under this area - future enhancement)
     
+    conn.execute("DELETE FROM areas WHERE id = ?1", params![&id])
+        .map_err(|e| {
+            log::error!("Failed to delete area {}: {}", id, e);
+            AppError::from(e).with_context(crate::errors::ErrorContext {
+                user_action: "Deleting area".to_string(),
+                recovery_suggestions: vec![
+                    "The area may be in use by another process".to_string(),
+                    "Try again after a moment".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            })
+        })?;
+    
+    log::info!("Deleted area with ID: {}", id);
     Ok(())
 }
 

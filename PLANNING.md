@@ -413,6 +413,13 @@ interface MigrationPipeline {
 **Decision**: Create dual interfaces - plain data interfaces and extended interfaces with methods  
 **Consequences**: Better type safety, clearer API contracts, easier testing with mock implementations
 
+### ADR-011: Entity CRUD Implementation Pattern
+
+**Status**: Accepted  
+**Context**: Need consistent CRUD operations for all entity types with proper validation and error handling  
+**Decision**: Implement comprehensive CRUD operations with validation, cascade checking, and detailed error messages  
+**Consequences**: Consistent API across entities, better user experience, safer data operations, easier debugging
+
 ## Risk Analysis
 
 ### Technical Risks

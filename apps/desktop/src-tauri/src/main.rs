@@ -13,6 +13,9 @@ mod filesystem;
 mod models;
 mod utils;
 
+#[cfg(test)]
+mod tests;
+
 /// Set up logging with appropriate configuration
 fn setup_logging() {
     let mut builder = Builder::from_default_env();

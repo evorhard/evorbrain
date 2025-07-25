@@ -163,11 +163,11 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Implement Project struct with relationships
   - [x] Define Task struct with flexible parent links
   - [x] Add entity validation and constraints
-- [ ] **TASK-029**: Implement Area entity CRUD - 🟠
-  - [ ] Create area creation with validation
-  - [ ] Implement area reading and querying
-  - [ ] Add area update functionality
-  - [ ] Implement area deletion with cascade logic
+- [x] **TASK-029**: Implement Area entity CRUD - 🟠
+  - [x] Create area creation with validation
+  - [x] Implement area reading and querying
+  - [x] Add area update functionality
+  - [x] Implement area deletion with cascade logic
 - [ ] **TASK-030**: Implement Goal entity CRUD - 🟠
   - [ ] Create goal with area association
   - [ ] Implement goal reading and filtering
