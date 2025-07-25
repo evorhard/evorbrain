@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 
 import { LoadingOverlay } from '@mantine/core';
-import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
 import { ROUTES } from './routes';
 import { AppLayout } from '../layout/AppLayout';
@@ -42,59 +42,25 @@ function ErrorPage() {
   );
 }
 
-// Create router
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <RootLayout />,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        index: true,
-        element: <Navigate replace to={ROUTES.DAILY_VIEW} />,
-      },
-      {
-        path: ROUTES.DAILY_VIEW,
-        element: <DailyViewPage />,
-      },
-      {
-        path: ROUTES.CALENDAR_VIEW,
-        element: <CalendarViewPage />,
-      },
-      {
-        path: ROUTES.HIERARCHY_VIEW,
-        element: <HierarchyViewPage />,
-      },
-      {
-        path: ROUTES.SETTINGS,
-        element: <SettingsPage />,
-      },
-      // Entity routes - TODO: implement these pages
-      {
-        path: ROUTES.AREA,
-        element: <div>Area Detail Page - TODO</div>,
-      },
-      {
-        path: ROUTES.GOAL,
-        element: <div>Goal Detail Page - TODO</div>,
-      },
-      {
-        path: ROUTES.PROJECT,
-        element: <div>Project Detail Page - TODO</div>,
-      },
-      {
-        path: ROUTES.TASK,
-        element: <div>Task Detail Page - TODO</div>,
-      },
-      {
-        path: ROUTES.SEARCH,
-        element: <div>Search Page - TODO</div>,
-      },
-    ],
-  },
-]);
-
 // Router Provider component
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<RootLayout />} path="/">
+          <Route index element={<Navigate replace to={ROUTES.DAILY_VIEW} />} />
+          <Route element={<DailyViewPage />} path={ROUTES.DAILY_VIEW} />
+          <Route element={<CalendarViewPage />} path={ROUTES.CALENDAR_VIEW} />
+          <Route element={<HierarchyViewPage />} path={ROUTES.HIERARCHY_VIEW} />
+          <Route element={<SettingsPage />} path={ROUTES.SETTINGS} />
+          {/* Entity routes - TODO: implement these pages */}
+          <Route element={<div>Area Detail Page - TODO</div>} path={ROUTES.AREA} />
+          <Route element={<div>Goal Detail Page - TODO</div>} path={ROUTES.GOAL} />
+          <Route element={<div>Project Detail Page - TODO</div>} path={ROUTES.PROJECT} />
+          <Route element={<div>Task Detail Page - TODO</div>} path={ROUTES.TASK} />
+          <Route element={<div>Search Page - TODO</div>} path={ROUTES.SEARCH} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
