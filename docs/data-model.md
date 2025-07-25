@@ -32,8 +32,8 @@ description: 'Professional growth and career advancement'
 color: '#FF6B6B'
 icon: 'briefcase'
 status: active
-created_at: 2024-01-01T00:00:00Z
-updated_at: 2024-01-01T00:00:00Z
+created_at: 2025-07-01T00:00:00Z
+updated_at: 2025-07-01T00:00:00Z
 order: 1
 tags: ['work', 'professional']
 metadata:
@@ -76,8 +76,8 @@ status: in_progress
 priority: high
 target_date: 2025-12-31
 progress: 45
-created_at: 2024-01-01T00:00:00Z
-updated_at: 2024-01-01T00:00:00Z
+created_at: 2025-07-01T00:00:00Z
+updated_at: 2025-07-01T00:00:00Z
 completed_at: null
 tags: ['career', 'technical', 'leadership']
 metadata:
@@ -123,11 +123,11 @@ title: 'Build Personal Portfolio Website'
 description: 'Create professional portfolio to showcase projects'
 status: active
 priority: high
-start_date: 2024-01-15
-due_date: 2024-03-01
+start_date: 2025-07-15
+due_date: 2025-09-01
 progress: 30
-created_at: 2024-01-01T00:00:00Z
-updated_at: 2024-01-01T00:00:00Z
+created_at: 2025-07-01T00:00:00Z
+updated_at: 2025-07-01T00:00:00Z
 completed_at: null
 tags: ['portfolio', 'web-development', 'career']
 metadata:
@@ -176,13 +176,13 @@ title: 'Design homepage wireframe'
 description: 'Create low-fidelity wireframe for portfolio homepage'
 status: todo
 priority: medium
-due_date: 2024-01-20T17:00:00Z
+due_date: 2025-07-30T17:00:00Z
 estimated_duration: 120 # minutes
 actual_duration: null
 completed_at: null
 recurrence: null # See recurrence section below
-created_at: 2024-01-01T00:00:00Z
-updated_at: 2024-01-01T00:00:00Z
+created_at: 2025-07-01T00:00:00Z
+updated_at: 2025-07-01T00:00:00Z
 tags: ['design', 'wireframe', 'ui']
 checklist:
   - text: 'Research portfolio examples'
@@ -228,15 +228,15 @@ For recurring tasks, the `recurrence` field follows this structure:
 ```yaml
 recurrence:
   rule: 'FREQ=WEEKLY;BYDAY=MO,WE,FR' # RFC 5545 RRULE
-  next_due: 2024-01-22T09:00:00Z
+  next_due: 2025-07-28T09:00:00Z
   instances_ahead: 3 # Number of future instances to generate
   exceptions: # Dates to skip
-    - 2024-02-14
-    - 2024-12-25
+    - 2025-08-14
+    - 2025-12-25
   modifications: # Instance-specific changes
-    - date: 2024-01-29
+    - date: 2025-07-29
       changes:
-        due_date: 2024-01-30T09:00:00Z
+        due_date: 2025-07-30T09:00:00Z
         description: 'Modified for holiday'
 ```
 

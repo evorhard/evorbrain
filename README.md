@@ -9,7 +9,7 @@
   
   <p>
     <img src="https://img.shields.io/badge/Status-Under_Construction-orange?style=for-the-badge" alt="Status: Under Construction" />
-    <img src="https://img.shields.io/badge/Phase-1_Foundation-blue?style=for-the-badge" alt="Phase 1: Foundation" />
+    <img src="https://img.shields.io/badge/Phase-2_Core_Features-blue?style=for-the-badge" alt="Phase 2: Core Features" />
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License: Apache 2.0" />
   </p>
   
@@ -107,49 +107,39 @@ EvorBrain will be a powerful, customizable personal knowledge management system 
 <div align="center">
   <table>
     <tr>
-      <td align="center">🚧</td>
+      <td align="center">✅</td>
       <td><strong>Phase 1: Foundation</strong></td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td align="center">🚧</td>
+      <td><strong>Phase 2: Core Features</strong></td>
       <td>In Progress</td>
     </tr>
     <tr>
-      <td align="center">📦</td>
-      <td><strong>Monorepo Setup</strong></td>
-      <td>✅ Complete</td>
+      <td align="center">📋</td>
+      <td><strong>Data Model Implementation</strong></td>
+      <td>⏳ Planned</td>
     </tr>
     <tr>
-      <td align="center">📁</td>
-      <td><strong>Workspace Packages</strong></td>
-      <td>✅ Complete</td>
+      <td align="center">💾</td>
+      <td><strong>File Storage System</strong></td>
+      <td>⏳ Planned</td>
     </tr>
     <tr>
-      <td align="center">🦀</td>
-      <td><strong>Tauri Integration</strong></td>
-      <td>✅ Complete</td>
+      <td align="center">📊</td>
+      <td><strong>State Management</strong></td>
+      <td>⏳ Planned</td>
     </tr>
     <tr>
-      <td align="center">⚛️</td>
-      <td><strong>React Foundation</strong></td>
-      <td>✅ Complete</td>
+      <td align="center">🎨</td>
+      <td><strong>Basic UI Components</strong></td>
+      <td>⏳ Planned</td>
     </tr>
     <tr>
-      <td align="center">🗄️</td>
-      <td><strong>SQLite Database</strong></td>
-      <td>✅ Complete</td>
-    </tr>
-    <tr>
-      <td align="center">📁</td>
-      <td><strong>File System Abstraction</strong></td>
-      <td>✅ Complete</td>
-    </tr>
-    <tr>
-      <td align="center">🔌</td>
-      <td><strong>Basic IPC Commands</strong></td>
-      <td>✅ Complete</td>
-    </tr>
-    <tr>
-      <td align="center">⚠️</td>
-      <td><strong>Error Handling System</strong></td>
-      <td>✅ Complete</td>
+      <td align="center">🔍</td>
+      <td><strong>Search Implementation</strong></td>
+      <td>⏳ Planned</td>
     </tr>
   </table>
 </div>
@@ -249,8 +239,8 @@ Development is organized into six phases:
 
 | Phase                       | Focus                                             | Status         |
 | --------------------------- | ------------------------------------------------- | -------------- |
-| **1️⃣ Foundation**           | Project setup, Tauri integration, basic structure | 🚧 In Progress |
-| **2️⃣ Core Features**        | Data model, file storage, basic UI                | ⏳ Planned     |
+| **1️⃣ Foundation**           | Project setup, Tauri integration, basic structure | ✅ Complete    |
+| **2️⃣ Core Features**        | Data model, file storage, basic UI                | 🚧 In Progress |
 | **3️⃣ Enhanced Features**    | Calendar, drag-and-drop, advanced UI              | ⏳ Planned     |
 | **4️⃣ Plugin System**        | Extensibility and third-party plugins             | ⏳ Planned     |
 | **5️⃣ Performance & Polish** | Optimization, testing, security                   | ⏳ Planned     |
@@ -264,13 +254,13 @@ Contributions are welcome once the basic architecture is established!
 
 ### How You Can Help:
 
-🏗 **Architecture Phase** (Current)
+🎯 **Core Features Phase** (Current)
 
-- Review and provide feedback on architecture decisions
-- Suggest improvements to the development workflow
-- Help with documentation and planning
+- Test early alpha builds and report issues
+- Provide feedback on UI/UX design
+- Help with documentation and guides
 
-🧪 **Testing Phase** (Coming Soon)
+🧪 **Testing Phase** (Phase 3+)
 
 - Test early builds and report bugs
 - Provide UX/UI feedback
@@ -288,7 +278,7 @@ Contributions are welcome once the basic architecture is established!
 - Translation help (Phase 5+)
 - Community support and engagement
 
-> 📋 Formal contributing guidelines will be established during Phase 1 development.
+> 📋 Contributing guidelines are being developed. Please open an issue or discussion for major changes.
 
 ## 📄 License
 

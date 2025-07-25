@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Phase 2: Core Features** (In Progress)
+  - Starting implementation of data model for Areas, Goals, Projects, and Tasks
+  - Beginning work on file storage system with YAML frontmatter
+  - Initial state management setup with Zustand
+
+## [Phase 1 Complete] - 2025-07-25
+
+### Added
+
+- **Foundation Phase Complete** 🎉
 - Initial project structure and documentation
 - Core application architecture using Tauri 2.0
 - Monorepo setup with pnpm workspaces
