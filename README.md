@@ -37,7 +37,7 @@
     <p style="margin: 0;">
       <!-- This project is currently in early development. Features and documentation are being actively developed. -->
       This project is currently on hold and archived. I felt I went into the wrong direction and a bit in over my head; not that I could not finish this project but I want to start "easier", get a MVP earlier and work on setting up the project for extensibility later.
-      See <a href="TASKS.md">TASKS.md</a> for detailed development roadmap and <a href="ROADMAP.md">ROADMAP.md</a> for planned milestones.
+      <!-- See <a href="TASKS.md">TASKS.md</a> for detailed development roadmap and <a href="ROADMAP.md">ROADMAP.md</a> for planned milestones. -->
     </p>
   </div>
 </div>
