@@ -201,6 +201,13 @@ fn main() {
             commands::update_task,
             commands::update_task_status,
             commands::delete_task,
+            
+            // Relationship management commands
+            commands::get_entity_relationships,
+            commands::get_children_entities,
+            commands::validate_entity_relationship,
+            commands::check_cascade_impact,
+            commands::update_children_on_parent_change,
         ])
         .on_window_event(|_window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

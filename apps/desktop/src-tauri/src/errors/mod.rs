@@ -28,6 +28,7 @@ pub enum ErrorCode {
     EntityAlreadyExists = 3002,
     InvalidEntityReference = 3003,
     OrphanedEntity = 3004,
+    InvalidEntityType = 3005,
     
     // Validation errors (4xxx)
     InvalidInput = 4001,

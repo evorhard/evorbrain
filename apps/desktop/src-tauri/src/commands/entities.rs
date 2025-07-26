@@ -46,7 +46,7 @@ impl PaginationParams {
 }
 
 // Helper to parse DateTime from database string
-fn parse_datetime(datetime_str: &str, column_index: usize) -> Result<DateTime<Utc>, rusqlite::Error> {
+pub fn parse_datetime(datetime_str: &str, column_index: usize) -> Result<DateTime<Utc>, rusqlite::Error> {
     DateTime::parse_from_rfc3339(datetime_str)
         .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
             column_index,
@@ -79,7 +79,7 @@ fn parse_area(row: &Row) -> Result<Area, rusqlite::Error> {
     })
 }
 
-fn parse_goal_status(status: &str) -> GoalStatus {
+pub fn parse_goal_status(status: &str) -> GoalStatus {
     match status {
         "not-started" => GoalStatus::NotStarted,
         "in-progress" => GoalStatus::InProgress,
@@ -92,7 +92,7 @@ fn parse_goal_status(status: &str) -> GoalStatus {
     }
 }
 
-fn parse_project_status(status: &str) -> ProjectStatus {
+pub fn parse_project_status(status: &str) -> ProjectStatus {
     match status {
         "planning" => ProjectStatus::Planning,
         "active" => ProjectStatus::Active,
@@ -106,7 +106,7 @@ fn parse_project_status(status: &str) -> ProjectStatus {
     }
 }
 
-fn parse_task_status(status: &str) -> TaskStatus {
+pub fn parse_task_status(status: &str) -> TaskStatus {
     match status {
         "not-started" => TaskStatus::NotStarted,
         "in-progress" => TaskStatus::InProgress,
@@ -119,7 +119,7 @@ fn parse_task_status(status: &str) -> TaskStatus {
     }
 }
 
-fn parse_task_priority(priority: Option<String>) -> TaskPriority {
+pub fn parse_task_priority(priority: Option<String>) -> TaskPriority {
     priority.map(|p| match p.as_str() {
         "urgent" => TaskPriority::Urgent,
         "high" => TaskPriority::High,

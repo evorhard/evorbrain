@@ -10,3 +10,6 @@ mod project_tests;
 
 #[cfg(test)]
 mod task_tests;
+
+#[cfg(test)]
+mod relationship_tests;

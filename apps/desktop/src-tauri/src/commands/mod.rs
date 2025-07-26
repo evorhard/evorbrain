@@ -2,6 +2,7 @@
 
 pub mod filesystem;
 pub mod entities;
+pub mod relationships;
 
 use tauri::State;
 use crate::database::search::{search_entities, test_fts5, SearchResult};
@@ -10,6 +11,7 @@ use crate::database::pool::{AppState, get_db_connection_from_state};
 // Re-export all commands
 pub use filesystem::*;
 pub use entities::*;
+pub use relationships::*;
 
 #[tauri::command]
 pub fn greet(name: &str) -> String {

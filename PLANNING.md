@@ -678,4 +678,12 @@ For existing development databases after entity implementation:
 **Decision**: Implemented full Goal CRUD with area association validation, partial updates, cascade checking, and search indexing  
 **Consequences**: Robust goal management, consistent error messages, safer cascade operations, improved user experience
 
+### ADR-022: Entity Relationship Management System
+
+**Status**: Accepted  
+**Date**: 2025-07-26  
+**Context**: Need comprehensive relationship tracking between entities for hierarchy navigation, backlinks, and cascade operations  
+**Decision**: Implemented dedicated relationship management module with parent-child queries, reference tracking, validation, and cascade impact analysis  
+**Consequences**: Efficient relationship queries, safe cascade operations, cross-entity reference support, circular reference prevention
+
 This planning document is a living document and will evolve as the project develops. All major technical decisions should be documented here with appropriate ADRs (Architecture Decision Records).
