@@ -178,11 +178,11 @@ This document provides a granular breakdown of development tasks organized by ph
   - [x] Implement project reading and status filtering
   - [x] Add project update with task cascade
   - [x] Implement project deletion with task handling
-- [ ] **TASK-032**: Implement Task entity CRUD - 🟠
-  - [ ] Create tasks with flexible parent relationships
-  - [ ] Implement task reading with complex filters
-  - [ ] Add task update with status transitions
-  - [ ] Implement task deletion with subtask cascade
+- [x] **TASK-032**: Implement Task entity CRUD - 🟠
+  - [x] Create tasks with flexible parent relationships
+  - [x] Implement task reading with complex filters
+  - [x] Add task update with status transitions
+  - [x] Implement task deletion with subtask cascade
 - [ ] **TASK-033**: Create entity relationship management - 🟠
   - [ ] Implement parent-child relationship queries
   - [ ] Add backlink and reference tracking

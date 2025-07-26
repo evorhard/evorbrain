@@ -152,7 +152,7 @@ pub enum TaskStatus {
 }
 
 /// Task priority values
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum TaskPriority {
     Low,

@@ -78,6 +78,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Created unit tests for Project CRUD operations covering all scenarios
     - Added PartialEq trait to ProjectStatus enum for testing support
     - Integrated logging and detailed error messages with recovery suggestions
+  - Completed Task entity CRUD operations (TASK-032):
+    - Enhanced create_task with comprehensive validation, parent entity checking, and automatic sort_order calculation
+    - Added support for tags, estimated_minutes, and sort_order parameters in task creation
+    - Implemented parent-child relationships with both project_id and parent_task_id support
+    - Enhanced update_task to support partial updates for all fields including tags, estimated/actual minutes, and sort_order
+    - Added validation for completed tasks to ensure they have completion dates
+    - Implemented delete_task with subtask cascade checking and search index cleanup
+    - Enhanced get_task with proper error handling for entity not found
+    - Added comprehensive validation for estimated/actual minutes (non-negative values)
+    - Created unit tests for Task CRUD operations covering all scenarios including subtasks and status transitions
+    - Added PartialEq trait to TaskPriority enum for testing support
+    - Integrated search indexing for all task operations
+    - Implemented automatic sort_order calculation based on context (subtasks, project tasks, or standalone tasks)
 
 - **Architecture Decision Records (ADRs)** - Added 6 new ADRs based on code quality analysis:
   - ADR-014: State Management Implementation with Zustand

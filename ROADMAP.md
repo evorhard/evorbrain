@@ -47,7 +47,7 @@ Implement fundamental knowledge management features
 ### Milestones
 
 - [x] Hierarchical data model (Areas → Goals → Projects → Tasks)
-- [ ] CRUD operations for all entity types (80% complete - Task CRUD remaining)
+- [x] CRUD operations for all entity types (100% complete)
 - [ ] Markdown file storage with YAML frontmatter
 - [ ] Basic UI components with Mantine
 - [ ] State management with Zustand

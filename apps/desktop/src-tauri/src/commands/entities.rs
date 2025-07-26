@@ -1381,10 +1381,70 @@ pub async fn create_task(
     parent_task_id: Option<String>,
     due_date: Option<String>,
     priority: Option<String>,
+    estimated_minutes: Option<i32>,
+    tags: Option<Vec<String>>,
+    sort_order: Option<i32>,
 ) -> Result<Task, AppError> {
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Creating task".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    info!("Creating new task: {}", title);
+    
     let mut task = Task::new(title, description);
-    task.project_id = project_id;
-    task.parent_task_id = parent_task_id;
+    task.project_id = project_id.clone();
+    task.parent_task_id = parent_task_id.clone();
+    task.tags = tags;
+    task.estimated_minutes = estimated_minutes;
+    
+    // Calculate sort_order if not provided
+    let conn = get_db_connection_from_state(&state)?;
+    
+    if let Some(order) = sort_order {
+        task.sort_order = order;
+    } else {
+        // Calculate next sort order based on context
+        let query = if let Some(ref _parent_id) = parent_task_id {
+            // For subtasks, get max sort_order within parent
+            "SELECT MAX(sort_order) FROM tasks WHERE parent_task_id = ?1"
+        } else if let Some(ref _proj_id) = project_id {
+            // For project tasks, get max sort_order within project
+            "SELECT MAX(sort_order) FROM tasks WHERE project_id = ?1 AND parent_task_id IS NULL"
+        } else {
+            // For standalone tasks
+            "SELECT MAX(sort_order) FROM tasks WHERE project_id IS NULL AND parent_task_id IS NULL"
+        };
+        
+        let max_order: Option<i32> = if let Some(ref parent_id) = parent_task_id {
+            conn.query_row(query, params![parent_id], |row| row.get(0)).ok().flatten()
+        } else if let Some(ref proj_id) = project_id {
+            conn.query_row(query, params![proj_id], |row| row.get(0)).ok().flatten()
+        } else {
+            conn.query_row(query, [], |row| row.get(0)).ok().flatten()
+        };
+        
+        task.sort_order = max_order.unwrap_or(0) + 1;
+    }
     
     // Validate due date if provided
     if let Some(date_str) = &due_date {
@@ -1393,20 +1453,47 @@ pub async fn create_task(
     }
     task.due_date = due_date;
     
+    // Parse priority
     if let Some(p) = priority {
         task.priority = match p.as_str() {
             "urgent" => TaskPriority::Urgent,
             "high" => TaskPriority::High,
             "medium" => TaskPriority::Medium,
             "low" => TaskPriority::Low,
-            _ => TaskPriority::Medium,
+            _ => {
+                error!("Invalid priority value: {}, defaulting to medium", p);
+                TaskPriority::Medium
+            }
         };
+    }
+    
+    // Validate parent relationships if provided
+    if let Some(ref proj_id) = task.project_id {
+        let project_exists = conn.query_row(
+            "SELECT 1 FROM projects WHERE id = ?1",
+            params![proj_id],
+            |_| Ok(()),
+        ).is_ok();
+        
+        if !project_exists {
+            return Err(AppError::entity_not_found("project", proj_id));
+        }
+    }
+    
+    if let Some(ref parent_id) = task.parent_task_id {
+        let parent_exists = conn.query_row(
+            "SELECT 1 FROM tasks WHERE id = ?1",
+            params![parent_id],
+            |_| Ok(()),
+        ).is_ok();
+        
+        if !parent_exists {
+            return Err(AppError::entity_not_found("parent task", parent_id));
+        }
     }
     
     // Validate the task
     task.validate()?;
-    
-    let conn = get_db_connection_from_state(&state)?;
     
     let tags_json = task.tags.as_ref()
         .and_then(|tags| serde_json::to_string(tags).ok());
@@ -1437,8 +1524,26 @@ pub async fn create_task(
             &task.recurrence_id,
             &task.recurrence_date,
         ],
-    )?;
+    ).map_err(|e| {
+        error!("Failed to create task: {}", e);
+        AppError::from(e).with_context(ErrorContext {
+            user_action: "Creating task".to_string(),
+            recovery_suggestions: vec![
+                "Check that all parent entities exist".to_string(),
+                "Ensure the data is valid and try again".to_string(),
+            ],
+            recoverable: true,
+            help_url: None,
+        })
+    })?;
     
+    // Index for search
+    if let Err(e) = crate::database::search::index_entity(&conn, &task.id) {
+        error!("Failed to index task in search: {}", e);
+        // Don't fail the operation if search indexing fails
+    }
+    
+    info!("Successfully created task with ID: {}", task.id);
     Ok(task)
 }
 
@@ -1520,26 +1625,76 @@ pub async fn delete_task(
     state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    info!("Attempting to delete task with ID: {}", id);
+    
     let conn = get_db_connection_from_state(&state)?;
+    
+    // First check if the task exists
+    let task_exists = conn.query_row(
+        "SELECT 1 FROM tasks WHERE id = ?1",
+        params![&id],
+        |_| Ok(()),
+    ).is_ok();
+    
+    if !task_exists {
+        return Err(AppError::entity_not_found("task", &id));
+    }
     
     // Check if task has subtasks
     let subtask_count: i32 = conn.query_row(
         "SELECT COUNT(*) FROM tasks WHERE parent_task_id = ?1",
         params![&id],
         |row| row.get(0),
-    )?;
+    ).map_err(|e| {
+        error!("Failed to check subtasks for task {}: {}", id, e);
+        AppError::from(e)
+    })?;
     
     if subtask_count > 0 {
         return Err(AppError::Validation {
             field: "task_id".to_string(),
-            reason: "Cannot delete task with subtasks".to_string(),
+            reason: format!("Cannot delete task with {} subtask(s). Please delete or reassign the subtasks first.", subtask_count),
             code: ErrorCode::InvalidEntityReference,
-            context: None,
+            context: Some(ErrorContext {
+                user_action: "Deleting task".to_string(),
+                recovery_suggestions: vec![
+                    "Delete all subtasks first".to_string(),
+                    "Move the subtasks to a different parent task before deleting".to_string(),
+                    format!("This task has {} subtask(s) that depend on it", subtask_count),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
         });
     }
     
-    conn.execute("DELETE FROM tasks WHERE id = ?1", params![&id])?;
+    // Delete from search index first
+    if let Err(e) = conn.execute(
+        "DELETE FROM search_index WHERE entity_id = ?1",
+        params![&id],
+    ) {
+        error!("Failed to remove task from search index: {}", e);
+        // Continue with deletion even if search index cleanup fails
+    }
     
+    conn.execute("DELETE FROM tasks WHERE id = ?1", params![&id])
+        .map_err(|e| {
+            error!("Failed to delete task {}: {}", id, e);
+            AppError::from(e).with_context(ErrorContext {
+                user_action: "Deleting task".to_string(),
+                recovery_suggestions: vec![
+                    "The task may be in use by another process".to_string(),
+                    "Try again after a moment".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            })
+        })?;
+    
+    info!("Successfully deleted task with ID: {}", id);
     Ok(())
 }
 
@@ -1582,7 +1737,10 @@ pub async fn get_task(
                 recurrence_date: row.get(17)?,
             })
         },
-    )?;
+    ).map_err(|e| match e {
+        rusqlite::Error::QueryReturnedNoRows => AppError::entity_not_found("task", &id),
+        _ => AppError::from(e),
+    })?;
     
     Ok(task)
 }
@@ -1704,31 +1862,148 @@ pub async fn update_task(
     id: String,
     title: String,
     description: Option<String>,
-    status: String,
+    status: Option<String>,
     due_date: Option<String>,
     priority: Option<String>,
+    estimated_minutes: Option<i32>,
+    actual_minutes: Option<i32>,
+    sort_order: Option<i32>,
+    tags: Option<Vec<String>>,
 ) -> Result<Task, AppError> {
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Updating task".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    info!("Updating task with ID: {}", id);
+    
     let conn = get_db_connection_from_state(&state)?;
     
-    // Validate status
-    let task_status = parse_task_status(&status);
+    // Get existing task to preserve fields that aren't being updated
+    let existing_task = get_task(state.clone(), id.clone()).await?;
     
-    let task_priority = parse_task_priority(priority);
+    // Use provided values or fall back to existing ones
+    let final_status = status.map(|s| parse_task_status(&s)).unwrap_or(existing_task.status.clone());
+    let final_priority = priority.map(|p| parse_task_priority(Some(p))).unwrap_or(existing_task.priority.clone());
+    let final_estimated = estimated_minutes.or(existing_task.estimated_minutes);
+    let final_actual = actual_minutes.or(existing_task.actual_minutes);
+    let final_sort_order = sort_order.unwrap_or(existing_task.sort_order);
+    let final_tags = tags.or(existing_task.tags);
+    
+    // Validate due date if provided
+    if let Some(date_str) = &due_date {
+        DateTime::parse_from_rfc3339(date_str)
+            .map_err(|_| AppError::invalid_format("due_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
+    }
+    
+    // Validate time estimates
+    if let Some(est) = final_estimated {
+        if est < 0 {
+            return Err(AppError::Validation {
+                field: "estimated_minutes".to_string(),
+                reason: "Estimated minutes cannot be negative".to_string(),
+                code: ErrorCode::ValueOutOfRange,
+                context: Some(ErrorContext {
+                    user_action: "Updating task estimates".to_string(),
+                    recovery_suggestions: vec![
+                        "Set estimated minutes to a positive value or 0".to_string(),
+                    ],
+                    recoverable: true,
+                    help_url: None,
+                }),
+            });
+        }
+    }
+    
+    if let Some(act) = final_actual {
+        if act < 0 {
+            return Err(AppError::Validation {
+                field: "actual_minutes".to_string(),
+                reason: "Actual minutes cannot be negative".to_string(),
+                code: ErrorCode::ValueOutOfRange,
+                context: Some(ErrorContext {
+                    user_action: "Updating task actuals".to_string(),
+                    recovery_suggestions: vec![
+                        "Set actual minutes to a positive value or 0".to_string(),
+                    ],
+                    recoverable: true,
+                    help_url: None,
+                }),
+            });
+        }
+    }
+    
+    // Set completed_at if completing the task
+    let completed_at = if final_status == TaskStatus::Completed {
+        if existing_task.completed_at.is_none() {
+            Some(Utc::now().to_rfc3339())
+        } else {
+            existing_task.completed_at
+        }
+    } else {
+        None
+    };
+    
+    let tags_json = final_tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
     
     conn.execute(
         "UPDATE tasks SET title = ?1, description = ?2, status = ?3, due_date = ?4, 
-         priority = ?5, updated_at = ?6 WHERE id = ?7",
+         priority = ?5, estimated_minutes = ?6, actual_minutes = ?7, completed_at = ?8,
+         sort_order = ?9, tags = ?10, updated_at = ?11 WHERE id = ?12",
         params![
             &title,
             &description,
-            task_status_to_string(&task_status),
+            task_status_to_string(&final_status),
             &due_date,
-            task_priority_to_string(&task_priority),
+            task_priority_to_string(&final_priority),
+            final_estimated,
+            final_actual,
+            &completed_at,
+            final_sort_order,
+            &tags_json,
             Utc::now().to_rfc3339(),
             &id,
         ],
-    )?;
+    ).map_err(|e| {
+        error!("Failed to update task {}: {}", id, e);
+        AppError::from(e).with_context(ErrorContext {
+            user_action: "Updating task".to_string(),
+            recovery_suggestions: vec![
+                "Check if the task exists".to_string(),
+                "Try refreshing and attempting the update again".to_string(),
+            ],
+            recoverable: true,
+            help_url: None,
+        })
+    })?;
     
+    // Update search index
+    if let Err(e) = crate::database::search::index_entity(&conn, &id) {
+        error!("Failed to update task in search index: {}", e);
+        // Don't fail the operation if search indexing fails
+    }
+    
+    info!("Successfully updated task with ID: {}", id);
     get_task(state, id).await
 }
 
