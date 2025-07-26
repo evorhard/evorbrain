@@ -328,11 +328,33 @@ interface MigrationPipeline {
 
 ## Technical Debt Management
 
+### Current Technical Debt (2025-07-26)
+
+#### High Priority
+
+- **Rust Error Handling**: 74 instances of unwrap()/expect() need proper Result<T, E> handling
+- **Authentication Stub**: ProtectedRoute using hardcoded isAuthenticated = true
+- **Empty Packages**: 3 workspace packages (@evorbrain/core, @evorbrain/ui, @evorbrain/plugin-api) with no implementation
+- **Missing Tests**: Minimal test coverage across the codebase
+
+#### Medium Priority
+
+- **React Performance**: No React.memo, useMemo, or useCallback usage detected
+- **Bundle Size**: Main bundle at 341KB (target: <250KB)
+- **TODO Comments**: 2 remaining TODOs in codebase
+- **FSD Compliance**: Missing entities/ and processes/ layers
+
+#### Low Priority
+
+- **Documentation**: Some components lack comprehensive JSDoc comments
+- **Empty onClick Handlers**: Cleaned up but some navigation still pending
+
 ### Acceptable Debt
 
 - Quick prototypes for user feedback
 - Temporary workarounds with tickets
 - Performance optimizations deferred
+- Documentation for internal components
 
 ### Unacceptable Debt
 
@@ -340,6 +362,8 @@ interface MigrationPipeline {
 - Data corruption risks
 - Accessibility violations
 - Missing tests for critical paths
+- Production unwrap() calls in Rust
+- Hardcoded authentication bypasses
 
 ## Decision Records
 
@@ -433,6 +457,155 @@ interface MigrationPipeline {
 **Context**: Need user-controlled ordering of entities within their hierarchical containers  
 **Decision**: Add sort_order integer field to all entities for manual ordering control  
 **Consequences**: Flexible user-defined ordering, simple to implement drag-and-drop reordering, predictable display order
+
+### ADR-014: State Management Implementation with Zustand
+
+**Status**: Accepted  
+**Context**: Need efficient state management solution for hierarchical data with TypeScript support  
+**Decision**: Implement Zustand for global state management and Jotai for atomic state and relationships  
+**Consequences**: Minimal boilerplate, excellent TypeScript support, simple devtools integration, efficient re-renders
+
+### ADR-015: Comprehensive Error Handling Strategy
+
+**Status**: Accepted  
+**Context**: Need to replace 74 instances of unwrap()/expect() with proper error handling  
+**Decision**: Implement Result<T, E> pattern throughout Rust code with context-aware error messages  
+**Consequences**: Better error recovery, improved user experience, easier debugging, no panic crashes
+
+### ADR-016: React Performance Optimization
+
+**Status**: Accepted  
+**Context**: Large bundle size (341KB) and missing React optimizations identified  
+**Decision**: Implement React.memo, useMemo, and useCallback systematically, add code splitting  
+**Consequences**: Improved rendering performance, reduced bundle size, better user experience
+
+### ADR-017: Authentication System Architecture
+
+**Status**: Accepted  
+**Context**: ProtectedRoute component currently stubbed with isAuthenticated = true  
+**Decision**: Implement proper authentication with Zustand state management and session persistence  
+**Consequences**: Secure user data, proper access control, session management capabilities
+
+### ADR-018: Testing Strategy Implementation
+
+**Status**: Accepted  
+**Context**: Minimal test setup currently, need comprehensive coverage for reliability  
+**Decision**: Implement Jest + React Testing Library with 80% coverage target, add E2E tests with Playwright  
+**Consequences**: Higher code quality, regression prevention, easier refactoring, increased confidence
+
+### ADR-019: Security Hardening Measures
+
+**Status**: Accepted  
+**Context**: Basic security measures in place but need comprehensive hardening  
+**Decision**: Implement input validation, CSP headers, secure IPC, and proper error filtering  
+**Consequences**: Protection against common vulnerabilities, secure user data, compliance readiness
+
+## Code Quality Standards
+
+### Current State Assessment (2025-07-26)
+
+Based on recent code quality analysis:
+
+#### Strengths
+
+- **Type Safety**: 100% - No `any` types found
+- **Architecture**: 90% - Excellent FSD implementation
+- **React Patterns**: 85% - Good functional component usage
+- **Security Foundation**: 75% - Good practices, auth pending
+
+#### Areas for Improvement
+
+- **Error Handling**: 70% - Needs Rust improvements
+- **Performance**: 85% - Minor optimizations needed
+- **Test Coverage**: Minimal - Needs comprehensive implementation
+- **Bundle Size**: Main bundle at 341KB needs optimization
+
+### Quality Metrics Targets
+
+```yaml
+type_safety: 100% # No any types allowed
+test_coverage:
+  unit: 80% # Minimum for all modules
+  integration: 70% # For critical paths
+  e2e: 60% # For user workflows
+performance:
+  bundle_size: < 250KB # Main bundle target
+  first_paint: < 1.5s # Initial render
+  interactive: < 3s # Full interactivity
+security:
+  csp_compliance: 100% # Full CSP implementation
+  input_validation: 100% # All user inputs validated
+  error_handling: 100% # No unwrap() in production
+```
+
+## Performance Optimization Strategy
+
+### Bundle Size Optimization
+
+- Implement code splitting for routes
+- Lazy load heavy components
+- Tree-shake unused dependencies
+- Use dynamic imports for optional features
+
+### React Performance
+
+- Add React.memo to list components
+- Implement useMemo for expensive computations
+- Use useCallback for event handlers
+- Virtual scrolling for large lists
+
+### State Management Performance
+
+- Selective subscriptions in Zustand
+- Atomic updates with Jotai
+- Debounced persistence operations
+- Optimistic UI updates
+
+## Security Architecture Enhancement
+
+### Input Validation Strategy
+
+- Frontend validation with Zod or Yup
+- Backend validation in Rust
+- SQL injection prevention
+- Path traversal protection
+
+### Error Message Security
+
+- Separate user-facing and developer errors
+- No system internals in user messages
+- Structured error logging
+- Proper error context without sensitive data
+
+### Authentication Implementation
+
+- JWT-based session management
+- Secure token storage
+- Session timeout handling
+- Remember me functionality
+
+## Testing Implementation Plan
+
+### Unit Testing
+
+- Jest + React Testing Library for frontend
+- Rust native testing for backend
+- Mock Tauri IPC for integration
+- Snapshot testing for UI components
+
+### Integration Testing
+
+- Test entity CRUD operations
+- Validate IPC communication
+- Test file system operations
+- Verify database operations
+
+### E2E Testing
+
+- Playwright for cross-platform testing
+- Critical user workflows
+- Visual regression testing
+- Performance testing
 
 ## Risk Analysis
 
