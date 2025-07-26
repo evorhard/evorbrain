@@ -3,9 +3,9 @@
 pub mod filesystem;
 pub mod entities;
 
-use rusqlite::Connection;
-use tauri::Manager;
+use tauri::State;
 use crate::database::search::{search_entities, test_fts5, SearchResult};
+use crate::database::pool::{AppState, get_db_connection_from_state};
 
 // Re-export all commands
 pub use filesystem::*;
@@ -68,15 +68,10 @@ pub async fn test_error_handling(error_type: String) -> Result<String, crate::er
 }
 
 #[tauri::command]
-pub fn test_database(app_handle: tauri::AppHandle) -> Result<String, String> {
-    // Get the database path
-    let app_dir = app_handle.path().app_data_dir()
-        .map_err(|e| format!("Failed to get app directory: {}", e))?;
-    let db_path = app_dir.join("evorbrain.db");
-    
-    // Open connection
-    let conn = Connection::open(&db_path)
-        .map_err(|e| format!("Failed to open database: {}", e))?;
+pub fn test_database(state: State<AppState>) -> Result<String, String> {
+    // Get connection from pool
+    let conn = get_db_connection_from_state(&state)
+        .map_err(|e| format!("Failed to get database connection: {}", e))?;
     
     // Test 1: Insert a test area
     let test_id = "test-area-1";
@@ -119,31 +114,27 @@ pub fn test_database(app_handle: tauri::AppHandle) -> Result<String, String> {
     
     Ok(format!(
         "Database tests completed successfully!\n\
-        - Connected to database at: {:?}\n\
+        - Connected to database\n\
         - Inserted test area with ID: {}\n\
         - Queried area: {} - {}\n\
         - Updated area description\n\
         - Deleted test area\n\
         - Verified {} tables exist",
-        db_path, test_id, area.1, area.2.unwrap_or_default(), table_count
+        test_id, area.1, area.2.unwrap_or_default(), table_count
     ))
 }
 
 #[tauri::command]
 pub fn search(
-    app_handle: tauri::AppHandle,
+    state: State<AppState>,
     query: String,
     entity_type: Option<String>,
     parent_id: Option<String>,
     limit: Option<usize>,
     offset: Option<usize>,
 ) -> Result<Vec<SearchResult>, String> {
-    let app_dir = app_handle.path().app_data_dir()
-        .map_err(|e| format!("Failed to get app directory: {}", e))?;
-    let db_path = app_dir.join("evorbrain.db");
-    
-    let conn = Connection::open(&db_path)
-        .map_err(|e| format!("Failed to open database: {}", e))?;
+    let conn = get_db_connection_from_state(&state)
+        .map_err(|e| format!("Failed to get database connection: {}", e))?;
     
     let results = search_entities(
         &conn,
@@ -158,13 +149,9 @@ pub fn search(
 }
 
 #[tauri::command]
-pub fn test_fts(app_handle: tauri::AppHandle) -> Result<String, String> {
-    let app_dir = app_handle.path().app_data_dir()
-        .map_err(|e| format!("Failed to get app directory: {}", e))?;
-    let db_path = app_dir.join("evorbrain.db");
-    
-    let conn = Connection::open(&db_path)
-        .map_err(|e| format!("Failed to open database: {}", e))?;
+pub fn test_fts(state: State<AppState>) -> Result<String, String> {
+    let conn = get_db_connection_from_state(&state)
+        .map_err(|e| format!("Failed to get database connection: {}", e))?;
     
     test_fts5(&conn)
         .map_err(|e| format!("FTS5 test failed: {}", e))

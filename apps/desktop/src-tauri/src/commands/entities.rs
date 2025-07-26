@@ -1,51 +1,69 @@
 use crate::errors::{AppError, ErrorCode, ErrorSeverity};
 use crate::models::{Area, Goal, Project, Task, GoalStatus, ProjectStatus, TaskStatus, TaskPriority};
-use rusqlite::{Connection, params, Row};
-// Removed unused imports - serde traits are already derived
-use tauri::Manager;
+use rusqlite::{params, Row};
+use tauri::State;
 use chrono::{DateTime, Utc};
 use serde_json;
+use serde::{Deserialize, Serialize};
+use crate::database::pool::{AppState, get_db_connection_from_state};
 
-// Helper to get database connection
-fn get_db_connection(app_handle: &tauri::AppHandle) -> Result<Connection, AppError> {
-    let app_dir = app_handle
-        .path()
-        .app_data_dir()
-        .map_err(|e| AppError::Operation {
-            message: format!("Failed to get app directory: {}", e),
-            code: crate::errors::ErrorCode::OperationFailed,
-            severity: crate::errors::ErrorSeverity::Error,
-            context: Some(crate::errors::ErrorContext {
-                user_action: "Accessing database".to_string(),
-                recovery_suggestions: vec![
-                    "Ensure the application has proper permissions".to_string(),
-                ],
-                recoverable: false,
-                help_url: None,
-            }),
-        })?;
-    let db_path = app_dir.join("evorbrain.db");
-    
-    Connection::open(&db_path)
-        .map_err(|e| {
-            let err = AppError::from(e);
-            err.with_context(crate::errors::ErrorContext {
-                user_action: "Opening database connection".to_string(),
-                recovery_suggestions: vec![
-                    "Check if the database file exists".to_string(),
-                    "Verify file permissions".to_string(),
-                    "Try restarting the application".to_string(),
-                ],
-                recoverable: true,
-                help_url: None,
-            })
-        })
+/// Pagination parameters
+#[derive(Debug, Deserialize)]
+pub struct PaginationParams {
+    pub page: Option<u32>,
+    pub per_page: Option<u32>,
 }
+
+/// Paginated response
+#[derive(Debug, Serialize)]
+pub struct PaginatedResponse<T> {
+    pub items: Vec<T>,
+    pub total: u32,
+    pub page: u32,
+    pub per_page: u32,
+    pub total_pages: u32,
+}
+
+impl Default for PaginationParams {
+    fn default() -> Self {
+        Self {
+            page: Some(1),
+            per_page: Some(50),
+        }
+    }
+}
+
+impl PaginationParams {
+    fn offset(&self) -> u32 {
+        let page = self.page.unwrap_or(1).max(1);
+        let per_page = self.per_page.unwrap_or(50);
+        (page - 1) * per_page
+    }
+    
+    fn limit(&self) -> u32 {
+        self.per_page.unwrap_or(50).min(100) // Max 100 items per page
+    }
+}
+
+// Helper to parse DateTime from database string
+fn parse_datetime(datetime_str: &str, column_index: usize) -> Result<DateTime<Utc>, rusqlite::Error> {
+    DateTime::parse_from_rfc3339(datetime_str)
+        .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
+            column_index,
+            rusqlite::types::Type::Text,
+            Box::new(e)
+        ))
+        .map(|dt| dt.with_timezone(&Utc))
+}
+
 
 // Helper functions to parse database rows
 fn parse_area(row: &Row) -> Result<Area, rusqlite::Error> {
     let tags_json: Option<String> = row.get(8)?;
     let tags = tags_json.and_then(|json| serde_json::from_str(&json).ok());
+    
+    let created_at_str: String = row.get(5)?;
+    let updated_at_str: String = row.get(6)?;
     
     Ok(Area {
         id: row.get(0)?,
@@ -53,12 +71,8 @@ fn parse_area(row: &Row) -> Result<Area, rusqlite::Error> {
         description: row.get(2)?,
         color: row.get(3)?,
         icon: row.get(4)?,
-        created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
-            .unwrap()
-            .with_timezone(&Utc),
-        updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
-            .unwrap()
-            .with_timezone(&Utc),
+        created_at: parse_datetime(&created_at_str, 5)?,
+        updated_at: parse_datetime(&updated_at_str, 6)?,
         sort_order: row.get(7)?,
         tags,
         entity_type: "area".to_string(),
@@ -71,7 +85,10 @@ fn parse_goal_status(status: &str) -> GoalStatus {
         "in-progress" => GoalStatus::InProgress,
         "completed" => GoalStatus::Completed,
         "abandoned" => GoalStatus::Abandoned,
-        _ => GoalStatus::NotStarted,
+        _ => {
+            log::warn!("Unknown goal status: {}, defaulting to NotStarted", status);
+            GoalStatus::NotStarted
+        }
     }
 }
 
@@ -82,7 +99,10 @@ fn parse_project_status(status: &str) -> ProjectStatus {
         "completed" => ProjectStatus::Completed,
         "on-hold" => ProjectStatus::OnHold,
         "cancelled" => ProjectStatus::Cancelled,
-        _ => ProjectStatus::Planning,
+        _ => {
+            log::warn!("Unknown project status: {}, defaulting to Planning", status);
+            ProjectStatus::Planning
+        }
     }
 }
 
@@ -92,7 +112,10 @@ fn parse_task_status(status: &str) -> TaskStatus {
         "in-progress" => TaskStatus::InProgress,
         "completed" => TaskStatus::Completed,
         "cancelled" => TaskStatus::Cancelled,
-        _ => TaskStatus::NotStarted,
+        _ => {
+            log::warn!("Unknown task status: {}, defaulting to NotStarted", status);
+            TaskStatus::NotStarted
+        }
     }
 }
 
@@ -146,7 +169,7 @@ fn task_priority_to_string(priority: &TaskPriority) -> &'static str {
 // Area Commands
 #[tauri::command]
 pub async fn create_area(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     title: String,
     description: Option<String>,
     color: Option<String>,
@@ -180,9 +203,10 @@ pub async fn create_area(
     // Validate the area
     area.validate()?;
     
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
-    let tags_json = area.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    let tags_json = area.tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
     
     conn.execute(
         "INSERT INTO areas (id, title, description, color, icon, created_at, updated_at, sort_order, tags)
@@ -235,10 +259,10 @@ pub async fn create_area(
 
 #[tauri::command]
 pub async fn get_area(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<Area, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let area = conn.query_row(
         "SELECT id, title, description, color, icon, created_at, updated_at, sort_order, tags 
@@ -263,9 +287,9 @@ pub async fn get_area(
 
 #[tauri::command]
 pub async fn get_all_areas(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
 ) -> Result<Vec<Area>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, title, description, color, icon, created_at, updated_at, sort_order, tags 
@@ -280,7 +304,7 @@ pub async fn get_all_areas(
 
 #[tauri::command]
 pub async fn update_area(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
     title: String,
     description: Option<String>,
@@ -310,14 +334,15 @@ pub async fn update_area(
         });
     }
     
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Get existing area to preserve fields that aren't being updated
-    let existing_area = get_area(app_handle.clone(), id.clone()).await?;
+    let existing_area = get_area(state.clone(), id.clone()).await?;
     
     let final_sort_order = sort_order.unwrap_or(existing_area.sort_order);
     let final_tags = tags.or(existing_area.tags);
-    let tags_json = final_tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    let tags_json = final_tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
     
     conn.execute(
         "UPDATE areas SET title = ?1, description = ?2, color = ?3, icon = ?4, 
@@ -346,15 +371,15 @@ pub async fn update_area(
     })?;
     
     log::info!("Updated area with ID: {}", id);
-    get_area(app_handle, id).await
+    get_area(state, id).await
 }
 
 #[tauri::command]
 pub async fn delete_area(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // First check if the area exists
     let area_exists = conn.query_row(
@@ -418,7 +443,7 @@ pub async fn delete_area(
 // Goal Commands
 #[tauri::command]
 pub async fn create_goal(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     area_id: String,
     title: String,
     description: Option<String>,
@@ -452,7 +477,7 @@ pub async fn create_goal(
     
     info!("Creating new goal: {} for area: {}", title, area_id);
     
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Verify that the area exists
     let area_exists = conn.query_row(
@@ -492,7 +517,8 @@ pub async fn create_goal(
     // Validate the goal
     goal.validate()?;
     
-    let tags_json = goal.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    let tags_json = goal.tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
     
     conn.execute(
         "INSERT INTO goals (id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags)
@@ -553,10 +579,10 @@ pub async fn create_goal(
 
 #[tauri::command]
 pub async fn get_goals_by_area(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     area_id: String,
 ) -> Result<Vec<Goal>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags 
@@ -575,12 +601,8 @@ pub async fn get_goals_by_area(
             target_date: row.get(4)?,
             status: parse_goal_status(&row.get::<_, String>(5)?),
             progress: row.get(6)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(7)?, 7)?,
+            updated_at: parse_datetime(&row.get::<_, String>(8)?, 8)?,
             sort_order: row.get(9)?,
             tags,
             entity_type: "goal".to_string(),
@@ -594,7 +616,7 @@ pub async fn get_goals_by_area(
 // Project Commands
 #[tauri::command]
 pub async fn create_project(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     goal_id: String,
     title: String,
     description: Option<String>,
@@ -619,9 +641,10 @@ pub async fn create_project(
     // Validate the project
     project.validate()?;
     
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
-    let tags_json = project.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    let tags_json = project.tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
     
     conn.execute(
         "INSERT INTO projects (id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags)
@@ -658,10 +681,10 @@ pub async fn create_project(
 
 #[tauri::command]
 pub async fn get_projects_by_goal(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     goal_id: String,
 ) -> Result<Vec<Project>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags 
@@ -681,12 +704,8 @@ pub async fn get_projects_by_goal(
             start_date: row.get(5)?,
             end_date: row.get(6)?,
             progress: row.get(7)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(8)?, 8)?,
+            updated_at: parse_datetime(&row.get::<_, String>(9)?, 9)?,
             sort_order: row.get(10)?,
             tags,
             entity_type: "project".to_string(),
@@ -700,7 +719,7 @@ pub async fn get_projects_by_goal(
 // Update Goal
 #[tauri::command]
 pub async fn update_goal(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
     title: String,
     description: Option<String>,
@@ -736,10 +755,10 @@ pub async fn update_goal(
     
     info!("Updating goal with ID: {}", id);
     
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Get existing goal to preserve fields that aren't being updated
-    let existing_goal = get_goal(app_handle.clone(), id.clone()).await?;
+    let existing_goal = get_goal(state.clone(), id.clone()).await?;
     
     // Use provided values or fall back to existing ones
     let final_status = status.map(|s| parse_goal_status(&s)).unwrap_or(existing_goal.status);
@@ -770,7 +789,8 @@ pub async fn update_goal(
         });
     }
     
-    let tags_json = final_tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    let tags_json = final_tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
     
     conn.execute(
         "UPDATE goals SET title = ?1, description = ?2, target_date = ?3, status = ?4, 
@@ -806,13 +826,13 @@ pub async fn update_goal(
     }
     
     info!("Successfully updated goal with ID: {}", id);
-    get_goal(app_handle, id).await
+    get_goal(state, id).await
 }
 
 // Delete Goal
 #[tauri::command]
 pub async fn delete_goal(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
     use crate::errors::ErrorContext;
@@ -820,7 +840,7 @@ pub async fn delete_goal(
     
     info!("Attempting to delete goal with ID: {}", id);
     
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // First check if the goal exists
     let goal_exists = conn.query_row(
@@ -890,10 +910,10 @@ pub async fn delete_goal(
 // Get single Goal
 #[tauri::command]
 pub async fn get_goal(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<Goal, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let goal = conn.query_row(
         "SELECT id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags 
@@ -911,12 +931,8 @@ pub async fn get_goal(
                 target_date: row.get(4)?,
                 status: parse_goal_status(&row.get::<_, String>(5)?),
                 progress: row.get(6)?,
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
-                    .unwrap()
-                    .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
-                    .unwrap()
-                    .with_timezone(&Utc),
+                created_at: parse_datetime(&row.get::<_, String>(7)?, 7)?,
+                updated_at: parse_datetime(&row.get::<_, String>(8)?, 8)?,
                 sort_order: row.get(9)?,
                 tags,
                 entity_type: "goal".to_string(),
@@ -930,9 +946,9 @@ pub async fn get_goal(
 // Get all Goals
 #[tauri::command]
 pub async fn get_all_goals(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
 ) -> Result<Vec<Goal>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, area_id, title, description, target_date, status, progress, created_at, updated_at, sort_order, tags 
@@ -951,12 +967,8 @@ pub async fn get_all_goals(
             target_date: row.get(4)?,
             status: parse_goal_status(&row.get::<_, String>(5)?),
             progress: row.get(6)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(7)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(7)?, 7)?,
+            updated_at: parse_datetime(&row.get::<_, String>(8)?, 8)?,
             sort_order: row.get(9)?,
             tags,
             entity_type: "goal".to_string(),
@@ -970,7 +982,7 @@ pub async fn get_all_goals(
 // Update Project
 #[tauri::command]
 pub async fn update_project(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
     title: String,
     description: Option<String>,
@@ -978,7 +990,7 @@ pub async fn update_project(
     start_date: Option<String>,
     end_date: Option<String>,
 ) -> Result<Project, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Validate status
     let project_status = parse_project_status(&status);
@@ -1007,16 +1019,16 @@ pub async fn update_project(
         ],
     )?;
     
-    get_project(app_handle, id).await
+    get_project(state, id).await
 }
 
 // Delete Project
 #[tauri::command]
 pub async fn delete_project(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Check if project has any tasks
     let task_count: i32 = conn.query_row(
@@ -1042,10 +1054,10 @@ pub async fn delete_project(
 // Get single Project
 #[tauri::command]
 pub async fn get_project(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<Project, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let project = conn.query_row(
         "SELECT id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags 
@@ -1064,12 +1076,8 @@ pub async fn get_project(
                 start_date: row.get(5)?,
                 end_date: row.get(6)?,
                 progress: row.get(7)?,
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
-                    .unwrap()
-                    .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
-                    .unwrap()
-                    .with_timezone(&Utc),
+                created_at: parse_datetime(&row.get::<_, String>(8)?, 8)?,
+                updated_at: parse_datetime(&row.get::<_, String>(9)?, 9)?,
                 sort_order: row.get(10)?,
                 tags,
                 entity_type: "project".to_string(),
@@ -1083,9 +1091,9 @@ pub async fn get_project(
 // Get all Projects
 #[tauri::command]
 pub async fn get_all_projects(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
 ) -> Result<Vec<Project>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, goal_id, title, description, status, start_date, end_date, progress, created_at, updated_at, sort_order, tags 
@@ -1105,12 +1113,8 @@ pub async fn get_all_projects(
             start_date: row.get(5)?,
             end_date: row.get(6)?,
             progress: row.get(7)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(9)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(8)?, 8)?,
+            updated_at: parse_datetime(&row.get::<_, String>(9)?, 9)?,
             sort_order: row.get(10)?,
             tags,
             entity_type: "project".to_string(),
@@ -1124,7 +1128,7 @@ pub async fn get_all_projects(
 // Task Commands
 #[tauri::command]
 pub async fn create_task(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     title: String,
     description: Option<String>,
     project_id: Option<String>,
@@ -1156,9 +1160,10 @@ pub async fn create_task(
     // Validate the task
     task.validate()?;
     
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
-    let tags_json = task.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    let tags_json = task.tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
     
     conn.execute(
         "INSERT INTO tasks (id, project_id, parent_task_id, title, description, status, due_date, priority, 
@@ -1181,7 +1186,8 @@ pub async fn create_task(
             task.updated_at.to_rfc3339(),
             task.sort_order,
             &tags_json,
-            task.recurrence.as_ref().map(|r| serde_json::to_string(r).unwrap_or_else(|_| "null".to_string())),
+            task.recurrence.as_ref()
+                .and_then(|r| serde_json::to_string(r).ok()),
             &task.recurrence_id,
             &task.recurrence_date,
         ],
@@ -1192,10 +1198,10 @@ pub async fn create_task(
 
 #[tauri::command]
 pub async fn get_tasks_by_project(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     project_id: String,
 ) -> Result<Vec<Task>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
@@ -1222,12 +1228,8 @@ pub async fn get_tasks_by_project(
             completed_at: row.get(8)?,
             estimated_minutes: row.get(9)?,
             actual_minutes: row.get(10)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(11)?, 11)?,
+            updated_at: parse_datetime(&row.get::<_, String>(12)?, 12)?,
             sort_order: row.get(13)?,
             tags,
             recurrence,
@@ -1243,11 +1245,11 @@ pub async fn get_tasks_by_project(
 
 #[tauri::command]
 pub async fn update_task_status(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
     status: String,
 ) -> Result<(), AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Validate status
     let task_status = parse_task_status(&status);
@@ -1269,10 +1271,10 @@ pub async fn update_task_status(
 
 #[tauri::command]
 pub async fn delete_task(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Check if task has subtasks
     let subtask_count: i32 = conn.query_row(
@@ -1298,10 +1300,10 @@ pub async fn delete_task(
 // Get single Task
 #[tauri::command]
 pub async fn get_task(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<Task, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let task = conn.query_row(
         "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
@@ -1322,12 +1324,8 @@ pub async fn get_task(
                 completed_at: row.get(8)?,
                 estimated_minutes: row.get(9)?,
                 actual_minutes: row.get(10)?,
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
-                    .unwrap()
-                    .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
-                    .unwrap()
-                    .with_timezone(&Utc),
+                created_at: parse_datetime(&row.get::<_, String>(11)?, 11)?,
+                updated_at: parse_datetime(&row.get::<_, String>(12)?, 12)?,
                 sort_order: row.get(13)?,
                 tags: row.get::<_, Option<String>>(14)?
                     .and_then(|s| serde_json::from_str(&s).ok()),
@@ -1346,9 +1344,9 @@ pub async fn get_task(
 // Get all Tasks
 #[tauri::command]
 pub async fn get_all_tasks(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
 ) -> Result<Vec<Task>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
@@ -1370,12 +1368,8 @@ pub async fn get_all_tasks(
             completed_at: row.get(8)?,
             estimated_minutes: row.get(9)?,
             actual_minutes: row.get(10)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(11)?, 11)?,
+            updated_at: parse_datetime(&row.get::<_, String>(12)?, 12)?,
             sort_order: row.get(13)?,
             tags: row.get::<_, Option<String>>(14)?
                 .and_then(|s| serde_json::from_str(&s).ok()),
@@ -1391,10 +1385,76 @@ pub async fn get_all_tasks(
     Ok(tasks)
 }
 
+// Get all Tasks with pagination
+#[tauri::command]
+pub async fn get_all_tasks_paginated(
+    state: State<'_, AppState>,
+    pagination: Option<PaginationParams>,
+) -> Result<PaginatedResponse<Task>, AppError> {
+    let conn = get_db_connection_from_state(&state)?;
+    let pagination = pagination.unwrap_or_default();
+    
+    // First get the total count
+    let total: u32 = conn.query_row(
+        "SELECT COUNT(*) FROM tasks",
+        [],
+        |row| row.get(0),
+    )?;
+    
+    // Then get the paginated results
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
+         completed_at, estimated_minutes, actual_minutes, created_at, updated_at, sort_order, tags,
+         recurrence, recurrence_id, recurrence_date
+         FROM tasks 
+         ORDER BY sort_order, created_at DESC
+         LIMIT ?1 OFFSET ?2"
+    )?;
+    
+    let tasks = stmt.query_map(params![pagination.limit(), pagination.offset()], |row| {
+        Ok(Task {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            parent_task_id: row.get(2)?,
+            title: row.get(3)?,
+            description: row.get(4)?,
+            status: parse_task_status(&row.get::<_, String>(5)?),
+            due_date: row.get(6)?,
+            priority: parse_task_priority(row.get::<_, Option<String>>(7)?),
+            completed_at: row.get(8)?,
+            estimated_minutes: row.get(9)?,
+            actual_minutes: row.get(10)?,
+            created_at: parse_datetime(&row.get::<_, String>(11)?, 11)?,
+            updated_at: parse_datetime(&row.get::<_, String>(12)?, 12)?,
+            sort_order: row.get(13)?,
+            tags: row.get::<_, Option<String>>(14)?
+                .and_then(|s| serde_json::from_str(&s).ok()),
+            entity_type: "task".to_string(),
+            recurrence: row.get::<_, Option<String>>(15)?
+                .and_then(|s| serde_json::from_str(&s).ok()),
+            recurrence_id: row.get(16)?,
+            recurrence_date: row.get(17)?,
+        })
+    })?
+    .collect::<Result<Vec<_>, _>>()?;
+    
+    let page = pagination.page.unwrap_or(1).max(1);
+    let per_page = pagination.limit();
+    let total_pages = (total as f32 / per_page as f32).ceil() as u32;
+    
+    Ok(PaginatedResponse {
+        items: tasks,
+        total,
+        page,
+        per_page,
+        total_pages,
+    })
+}
+
 // Update Task
 #[tauri::command]
 pub async fn update_task(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     id: String,
     title: String,
     description: Option<String>,
@@ -1402,7 +1462,7 @@ pub async fn update_task(
     due_date: Option<String>,
     priority: Option<String>,
 ) -> Result<Task, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Validate status
     let task_status = parse_task_status(&status);
@@ -1423,19 +1483,19 @@ pub async fn update_task(
         ],
     )?;
     
-    get_task(app_handle, id).await
+    get_task(state, id).await
 }
 
 // Task filtering commands
 #[tauri::command]
 pub async fn get_tasks_by_status(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     status: String,
 ) -> Result<Vec<Task>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     // Validate status
-    let _ = parse_task_status(&status);
+    let _ = parse_task_status(&status); // Validate status format
     
     let mut stmt = conn.prepare(
         "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
@@ -1462,12 +1522,8 @@ pub async fn get_tasks_by_status(
             completed_at: row.get(8)?,
             estimated_minutes: row.get(9)?,
             actual_minutes: row.get(10)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(11)?, 11)?,
+            updated_at: parse_datetime(&row.get::<_, String>(12)?, 12)?,
             sort_order: row.get(13)?,
             tags,
             recurrence,
@@ -1483,10 +1539,10 @@ pub async fn get_tasks_by_status(
 
 #[tauri::command]
 pub async fn get_upcoming_tasks(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     days: i64,
 ) -> Result<Vec<Task>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let future_date = Utc::now() + chrono::Duration::days(days);
     
@@ -1520,12 +1576,8 @@ pub async fn get_upcoming_tasks(
             completed_at: row.get(8)?,
             estimated_minutes: row.get(9)?,
             actual_minutes: row.get(10)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(11)?, 11)?,
+            updated_at: parse_datetime(&row.get::<_, String>(12)?, 12)?,
             sort_order: row.get(13)?,
             tags,
             recurrence,
@@ -1541,10 +1593,10 @@ pub async fn get_upcoming_tasks(
 
 #[tauri::command]
 pub async fn get_subtasks(
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
     parent_task_id: String,
 ) -> Result<Vec<Task>, AppError> {
-    let conn = get_db_connection(&app_handle)?;
+    let conn = get_db_connection_from_state(&state)?;
     
     let mut stmt = conn.prepare(
         "SELECT id, project_id, parent_task_id, title, description, status, due_date, priority, 
@@ -1571,12 +1623,8 @@ pub async fn get_subtasks(
             completed_at: row.get(8)?,
             estimated_minutes: row.get(9)?,
             actual_minutes: row.get(10)?,
-            created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(11)?)
-                .unwrap()
-                .with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(12)?)
-                .unwrap()
-                .with_timezone(&Utc),
+            created_at: parse_datetime(&row.get::<_, String>(11)?, 11)?,
+            updated_at: parse_datetime(&row.get::<_, String>(12)?, 12)?,
             sort_order: row.get(13)?,
             tags,
             recurrence,

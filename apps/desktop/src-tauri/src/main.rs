@@ -5,6 +5,7 @@ use tauri::Manager;
 use env_logger::{Builder, Target};
 use log::LevelFilter;
 use std::io::Write;
+use std::sync::Arc;
 
 mod commands;
 mod database;
@@ -114,6 +115,7 @@ fn main() {
             let db_path = app_dir.join("evorbrain.db");
             log::info!("Initializing database at: {:?}", db_path);
             
+            // First ensure the database schema is initialized
             database::init_database(&db_path)
                 .map_err(|e| {
                     let context = errors::ErrorContext {
@@ -132,6 +134,15 @@ fn main() {
                         context: Some(context),
                     }
                 })?;
+            
+            // Create connection pool
+            let pool = database::pool::init_pool(&db_path)?;
+            log::info!("Database connection pool initialized");
+            
+            // Store the pool in app state
+            app.manage(database::pool::AppState {
+                db_pool: Arc::new(pool),
+            });
             
             log::info!("Database initialized successfully");
             Ok(())
@@ -182,6 +193,7 @@ fn main() {
             commands::create_task,
             commands::get_task,
             commands::get_all_tasks,
+            commands::get_all_tasks_paginated,
             commands::get_tasks_by_project,
             commands::get_tasks_by_status,
             commands::get_upcoming_tasks,

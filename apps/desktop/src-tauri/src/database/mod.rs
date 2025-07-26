@@ -2,6 +2,7 @@ use rusqlite::{Connection, Result};
 use std::path::Path;
 
 pub mod search;
+pub mod pool;
 
 pub fn init_database(db_path: &Path) -> Result<()> {
     let conn = Connection::open(db_path)?;
