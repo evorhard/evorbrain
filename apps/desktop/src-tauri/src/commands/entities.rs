@@ -622,8 +622,69 @@ pub async fn create_project(
     description: Option<String>,
     start_date: Option<String>,
     end_date: Option<String>,
+    tags: Option<Vec<String>>,
+    sort_order: Option<i32>,
 ) -> Result<Project, AppError> {
-    let mut project = Project::new(goal_id, title, description);
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Creating project".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    info!("Creating new project for goal {}: {}", goal_id, title);
+    
+    let conn = get_db_connection_from_state(&state)?;
+    
+    // Check if goal exists
+    let goal_exists = conn.query_row(
+        "SELECT 1 FROM goals WHERE id = ?1",
+        params![&goal_id],
+        |_| Ok(()),
+    ).is_ok();
+    
+    if !goal_exists {
+        return Err(AppError::entity_not_found("goal", &goal_id)
+            .with_context(ErrorContext {
+                user_action: "Creating project".to_string(),
+                recovery_suggestions: vec![
+                    "Ensure the goal exists before creating a project".to_string(),
+                    "Check if you have the correct goal ID".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }));
+    }
+    
+    // Calculate sort_order if not provided
+    let final_sort_order = if let Some(order) = sort_order {
+        order
+    } else {
+        // Get the maximum sort_order for projects in this goal
+        let max_order: Option<i32> = conn.query_row(
+            "SELECT MAX(sort_order) FROM projects WHERE goal_id = ?1",
+            params![&goal_id],
+            |row| row.get(0),
+        ).unwrap_or(None);
+        max_order.unwrap_or(0) + 10
+    };
     
     // Validate dates if provided
     if let Some(date_str) = &start_date {
@@ -635,13 +696,15 @@ pub async fn create_project(
             .map_err(|_| AppError::invalid_format("end_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
     }
     
+    // Create project with provided values
+    let mut project = Project::new(goal_id, title, description);
     project.start_date = start_date;
     project.end_date = end_date;
+    project.tags = tags;
+    project.sort_order = final_sort_order;
     
     // Validate the project
     project.validate()?;
-    
-    let conn = get_db_connection_from_state(&state)?;
     
     let tags_json = project.tags.as_ref()
         .and_then(|tags| serde_json::to_string(tags).ok());
@@ -664,18 +727,44 @@ pub async fn create_project(
             &tags_json,
         ],
     ).map_err(|e| {
-        log::error!("Failed to create project: {}", e);
-        AppError::from(e).with_context(crate::errors::ErrorContext {
-            user_action: "Creating project".to_string(),
-            recovery_suggestions: vec![
-                "Check if the goal exists".to_string(),
-                "Ensure dates are valid".to_string(),
-            ],
-            recoverable: true,
-            help_url: None,
-        })
+        error!("Failed to create project: {}", e);
+        match &e {
+            rusqlite::Error::SqliteFailure(err, _) if err.code == rusqlite::ErrorCode::ConstraintViolation => {
+                AppError::Operation {
+                    message: "A project with this ID already exists".to_string(),
+                    code: ErrorCode::EntityAlreadyExists,
+                    severity: ErrorSeverity::Warning,
+                    context: Some(ErrorContext {
+                        user_action: "Creating project".to_string(),
+                        recovery_suggestions: vec![
+                            "Try using a different title".to_string(),
+                            "This might be a temporary issue, please try again".to_string(),
+                        ],
+                        recoverable: true,
+                        help_url: None,
+                    }),
+                }
+            },
+            _ => AppError::from(e).with_context(ErrorContext {
+                user_action: "Creating project".to_string(),
+                recovery_suggestions: vec![
+                    "Check if the goal exists".to_string(),
+                    "Ensure dates are valid".to_string(),
+                    "Try restarting the application".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        }
     })?;
     
+    // Index for search
+    if let Err(e) = crate::database::search::index_entity(&conn, &project.id) {
+        error!("Failed to index new project: {}", e);
+        // Don't fail the operation if indexing fails
+    }
+    
+    info!("Successfully created project with ID: {}", project.id);
     Ok(project)
 }
 
@@ -986,14 +1075,49 @@ pub async fn update_project(
     id: String,
     title: String,
     description: Option<String>,
-    status: String,
+    status: Option<String>,
     start_date: Option<String>,
     end_date: Option<String>,
+    progress: Option<i32>,
+    sort_order: Option<i32>,
+    tags: Option<Vec<String>>,
 ) -> Result<Project, AppError> {
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Updating project".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    info!("Updating project with ID: {}", id);
+    
     let conn = get_db_connection_from_state(&state)?;
     
-    // Validate status
-    let project_status = parse_project_status(&status);
+    // Get existing project to preserve fields that aren't being updated
+    let existing_project = get_project(state.clone(), id.clone()).await?;
+    
+    // Use provided values or fall back to existing ones
+    let final_status = status.map(|s| parse_project_status(&s)).unwrap_or(existing_project.status);
+    let final_progress = progress.unwrap_or(existing_project.progress);
+    let final_sort_order = sort_order.unwrap_or(existing_project.sort_order);
+    let final_tags = tags.or(existing_project.tags);
     
     // Validate dates if provided
     if let Some(date_str) = &start_date {
@@ -1005,20 +1129,81 @@ pub async fn update_project(
             .map_err(|_| AppError::invalid_format("end_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
     }
     
+    // Validate date ordering
+    if let (Some(start), Some(end)) = (&start_date, &end_date) {
+        if start > end {
+            return Err(AppError::Validation {
+                field: "dates".to_string(),
+                reason: "Start date must be before end date".to_string(),
+                code: ErrorCode::ValueOutOfRange,
+                context: Some(ErrorContext {
+                    user_action: "Updating project dates".to_string(),
+                    recovery_suggestions: vec![
+                        "Ensure start date is before end date".to_string(),
+                        "Check your date values".to_string(),
+                    ],
+                    recoverable: true,
+                    help_url: None,
+                }),
+            });
+        }
+    }
+    
+    // Validate progress is within range
+    if final_progress < 0 || final_progress > 100 {
+        return Err(AppError::Validation {
+            field: "progress".to_string(),
+            reason: "Progress must be between 0 and 100".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Updating project progress".to_string(),
+                recovery_suggestions: vec![
+                    "Set progress to a value between 0 and 100".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    let tags_json = final_tags.as_ref()
+        .and_then(|tags| serde_json::to_string(tags).ok());
+    
     conn.execute(
         "UPDATE projects SET title = ?1, description = ?2, status = ?3, start_date = ?4, 
-         end_date = ?5, updated_at = ?6 WHERE id = ?7",
+         end_date = ?5, progress = ?6, sort_order = ?7, tags = ?8, updated_at = ?9 WHERE id = ?10",
         params![
             &title,
             &description,
-            project_status_to_string(&project_status),
+            project_status_to_string(&final_status),
             &start_date,
             &end_date,
+            final_progress,
+            final_sort_order,
+            &tags_json,
             Utc::now().to_rfc3339(),
             &id,
         ],
-    )?;
+    ).map_err(|e| {
+        error!("Failed to update project {}: {}", id, e);
+        AppError::from(e).with_context(ErrorContext {
+            user_action: "Updating project".to_string(),
+            recovery_suggestions: vec![
+                "Check if the project exists".to_string(),
+                "Try refreshing and attempting the update again".to_string(),
+            ],
+            recoverable: true,
+            help_url: None,
+        })
+    })?;
     
+    // Update search index
+    if let Err(e) = crate::database::search::index_entity(&conn, &id) {
+        error!("Failed to update project in search index: {}", e);
+        // Don't fail the operation if search indexing fails
+    }
+    
+    info!("Successfully updated project with ID: {}", id);
     get_project(state, id).await
 }
 
@@ -1028,26 +1213,76 @@ pub async fn delete_project(
     state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    info!("Attempting to delete project with ID: {}", id);
+    
     let conn = get_db_connection_from_state(&state)?;
+    
+    // First check if the project exists
+    let project_exists = conn.query_row(
+        "SELECT 1 FROM projects WHERE id = ?1",
+        params![&id],
+        |_| Ok(()),
+    ).is_ok();
+    
+    if !project_exists {
+        return Err(AppError::entity_not_found("project", &id));
+    }
     
     // Check if project has any tasks
     let task_count: i32 = conn.query_row(
         "SELECT COUNT(*) FROM tasks WHERE project_id = ?1",
         params![&id],
         |row| row.get(0),
-    )?;
+    ).map_err(|e| {
+        error!("Failed to check tasks for project {}: {}", id, e);
+        AppError::from(e)
+    })?;
     
     if task_count > 0 {
         return Err(AppError::Validation {
             field: "project_id".to_string(),
-            reason: "Cannot delete project with associated tasks".to_string(),
+            reason: format!("Cannot delete project with {} associated task(s). Please delete or reassign the tasks first.", task_count),
             code: ErrorCode::InvalidEntityReference,
-            context: None,
+            context: Some(ErrorContext {
+                user_action: "Deleting project".to_string(),
+                recovery_suggestions: vec![
+                    "Delete all tasks associated with this project first".to_string(),
+                    "Move the tasks to a different project before deleting".to_string(),
+                    "Mark the project as completed instead of deleting it".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
         });
     }
     
-    conn.execute("DELETE FROM projects WHERE id = ?1", params![&id])?;
+    // Delete from search index first
+    if let Err(e) = conn.execute(
+        "DELETE FROM search_index WHERE entity_id = ?1",
+        params![&id],
+    ) {
+        error!("Failed to remove project from search index: {}", e);
+        // Continue with deletion even if search index cleanup fails
+    }
     
+    conn.execute("DELETE FROM projects WHERE id = ?1", params![&id])
+        .map_err(|e| {
+            error!("Failed to delete project {}: {}", id, e);
+            AppError::from(e).with_context(ErrorContext {
+                user_action: "Deleting project".to_string(),
+                recovery_suggestions: vec![
+                    "The project may be in use by another process".to_string(),
+                    "Try again after a moment".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            })
+        })?;
+    
+    info!("Successfully deleted project with ID: {}", id);
     Ok(())
 }
 
@@ -1083,7 +1318,18 @@ pub async fn get_project(
                 entity_type: "project".to_string(),
             })
         },
-    )?;
+    ).map_err(|e| {
+        match e {
+            rusqlite::Error::QueryReturnedNoRows => {
+                log::debug!("Project not found with ID: {}", id);
+                AppError::entity_not_found("project", &id)
+            },
+            _ => {
+                log::error!("Failed to get project {}: {}", id, e);
+                AppError::from(e)
+            }
+        }
+    })?;
     
     Ok(project)
 }

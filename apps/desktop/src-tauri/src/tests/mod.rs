@@ -4,3 +4,6 @@
 
 #[cfg(test)]
 mod goal_tests;
+
+#[cfg(test)]
+mod project_tests;
