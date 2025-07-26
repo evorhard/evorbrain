@@ -1,4 +1,4 @@
-use crate::errors::{AppError, ErrorCode};
+use crate::errors::{AppError, ErrorCode, ErrorSeverity};
 use crate::models::{Area, Goal, Project, Task, GoalStatus, ProjectStatus, TaskStatus, TaskPriority};
 use rusqlite::{Connection, params, Row};
 // Removed unused imports - serde traits are already derived
@@ -67,10 +67,11 @@ fn parse_area(row: &Row) -> Result<Area, rusqlite::Error> {
 
 fn parse_goal_status(status: &str) -> GoalStatus {
     match status {
-        "active" => GoalStatus::Active,
+        "not-started" => GoalStatus::NotStarted,
+        "in-progress" => GoalStatus::InProgress,
         "completed" => GoalStatus::Completed,
         "abandoned" => GoalStatus::Abandoned,
-        _ => GoalStatus::Active,
+        _ => GoalStatus::NotStarted,
     }
 }
 
@@ -107,7 +108,8 @@ fn parse_task_priority(priority: Option<String>) -> TaskPriority {
 
 fn goal_status_to_string(status: &GoalStatus) -> &'static str {
     match status {
-        GoalStatus::Active => "active",
+        GoalStatus::NotStarted => "not-started",
+        GoalStatus::InProgress => "in-progress",
         GoalStatus::Completed => "completed",
         GoalStatus::Abandoned => "abandoned",
     }
@@ -421,8 +423,49 @@ pub async fn create_goal(
     title: String,
     description: Option<String>,
     target_date: Option<String>,
+    tags: Option<Vec<String>>,
+    sort_order: Option<i32>,
 ) -> Result<Goal, AppError> {
-    let mut goal = Goal::new(area_id, title, description);
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Creating goal".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    info!("Creating new goal: {} for area: {}", title, area_id);
+    
+    let conn = get_db_connection(&app_handle)?;
+    
+    // Verify that the area exists
+    let area_exists = conn.query_row(
+        "SELECT 1 FROM areas WHERE id = ?1",
+        params![&area_id],
+        |_| Ok(()),
+    ).is_ok();
+    
+    if !area_exists {
+        return Err(AppError::entity_not_found("area", &area_id));
+    }
+    
+    let mut goal = Goal::new(area_id.clone(), title, description);
     
     // Validate target date if provided
     if let Some(date_str) = &target_date {
@@ -431,11 +474,23 @@ pub async fn create_goal(
             .map_err(|_| AppError::invalid_format("target_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
     }
     goal.target_date = target_date;
+    goal.tags = tags;
+    
+    // Calculate sort_order if not provided
+    if let Some(order) = sort_order {
+        goal.sort_order = order;
+    } else {
+        // Get the maximum sort_order for goals in this area
+        let max_order: Option<i32> = conn.query_row(
+            "SELECT MAX(sort_order) FROM goals WHERE area_id = ?1",
+            params![&area_id],
+            |row| row.get(0),
+        ).unwrap_or(None);
+        goal.sort_order = max_order.unwrap_or(0) + 1;
+    }
     
     // Validate the goal
     goal.validate()?;
-    
-    let conn = get_db_connection(&app_handle)?;
     
     let tags_json = goal.tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
     
@@ -455,8 +510,44 @@ pub async fn create_goal(
             goal.sort_order,
             &tags_json,
         ],
-    )?;
+    ).map_err(|e| {
+        error!("Failed to create goal: {}", e);
+        match &e {
+            rusqlite::Error::SqliteFailure(err, _) if err.code == rusqlite::ErrorCode::ConstraintViolation => {
+                AppError::Operation {
+                    message: "A goal with this ID already exists".to_string(),
+                    code: ErrorCode::EntityAlreadyExists,
+                    severity: ErrorSeverity::Warning,
+                    context: Some(ErrorContext {
+                        user_action: "Creating goal".to_string(),
+                        recovery_suggestions: vec![
+                            "Try using a different title".to_string(),
+                            "This might be a temporary issue, please try again".to_string(),
+                        ],
+                        recoverable: true,
+                        help_url: None,
+                    }),
+                }
+            },
+            _ => AppError::from(e).with_context(ErrorContext {
+                user_action: "Creating goal".to_string(),
+                recovery_suggestions: vec![
+                    "Check if the database is accessible".to_string(),
+                    "Try restarting the application".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        }
+    })?;
     
+    // Update search index
+    if let Err(e) = crate::database::search::index_entity(&conn, &goal.id) {
+        error!("Failed to index goal in search: {}", e);
+        // Don't fail the operation if search indexing fails
+    }
+    
+    info!("Successfully created goal with ID: {}", goal.id);
     Ok(goal)
 }
 
@@ -614,12 +705,47 @@ pub async fn update_goal(
     title: String,
     description: Option<String>,
     target_date: Option<String>,
-    status: String,
+    status: Option<String>,
+    progress: Option<i32>,
+    sort_order: Option<i32>,
+    tags: Option<Vec<String>>,
 ) -> Result<Goal, AppError> {
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    // Validate input
+    if title.trim().is_empty() {
+        return Err(AppError::missing_field("title"));
+    }
+    
+    if title.len() > 255 {
+        return Err(AppError::Validation {
+            field: "title".to_string(),
+            reason: "Title must be less than 255 characters".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Updating goal".to_string(),
+                recovery_suggestions: vec![
+                    "Please shorten the title to less than 255 characters".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    info!("Updating goal with ID: {}", id);
+    
     let conn = get_db_connection(&app_handle)?;
     
-    // Validate status
-    let goal_status = parse_goal_status(&status);
+    // Get existing goal to preserve fields that aren't being updated
+    let existing_goal = get_goal(app_handle.clone(), id.clone()).await?;
+    
+    // Use provided values or fall back to existing ones
+    let final_status = status.map(|s| parse_goal_status(&s)).unwrap_or(existing_goal.status);
+    let final_progress = progress.unwrap_or(existing_goal.progress);
+    let final_sort_order = sort_order.unwrap_or(existing_goal.sort_order);
+    let final_tags = tags.or(existing_goal.tags);
     
     // Validate target date if provided
     if let Some(date_str) = &target_date {
@@ -627,19 +753,59 @@ pub async fn update_goal(
             .map_err(|_| AppError::invalid_format("target_date", "ISO 8601 date (e.g., 2024-01-01T00:00:00Z)"))?;
     }
     
+    // Validate progress is within range
+    if final_progress < 0 || final_progress > 100 {
+        return Err(AppError::Validation {
+            field: "progress".to_string(),
+            reason: "Progress must be between 0 and 100".to_string(),
+            code: ErrorCode::ValueOutOfRange,
+            context: Some(ErrorContext {
+                user_action: "Updating goal progress".to_string(),
+                recovery_suggestions: vec![
+                    "Set progress to a value between 0 and 100".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
+        });
+    }
+    
+    let tags_json = final_tags.as_ref().map(|tags| serde_json::to_string(tags).unwrap_or_else(|_| "[]".to_string()));
+    
     conn.execute(
         "UPDATE goals SET title = ?1, description = ?2, target_date = ?3, status = ?4, 
-         updated_at = ?5 WHERE id = ?6",
+         progress = ?5, sort_order = ?6, tags = ?7, updated_at = ?8 WHERE id = ?9",
         params![
             &title,
             &description,
             &target_date,
-            goal_status_to_string(&goal_status),
+            goal_status_to_string(&final_status),
+            final_progress,
+            final_sort_order,
+            &tags_json,
             Utc::now().to_rfc3339(),
             &id,
         ],
-    )?;
+    ).map_err(|e| {
+        error!("Failed to update goal {}: {}", id, e);
+        AppError::from(e).with_context(ErrorContext {
+            user_action: "Updating goal".to_string(),
+            recovery_suggestions: vec![
+                "Check if the goal exists".to_string(),
+                "Try refreshing and attempting the update again".to_string(),
+            ],
+            recoverable: true,
+            help_url: None,
+        })
+    })?;
     
+    // Update search index
+    if let Err(e) = crate::database::search::index_entity(&conn, &id) {
+        error!("Failed to update goal in search index: {}", e);
+        // Don't fail the operation if search indexing fails
+    }
+    
+    info!("Successfully updated goal with ID: {}", id);
     get_goal(app_handle, id).await
 }
 
@@ -649,26 +815,75 @@ pub async fn delete_goal(
     app_handle: tauri::AppHandle,
     id: String,
 ) -> Result<(), AppError> {
+    use crate::errors::ErrorContext;
+    use log::{info, error};
+    
+    info!("Attempting to delete goal with ID: {}", id);
+    
     let conn = get_db_connection(&app_handle)?;
+    
+    // First check if the goal exists
+    let goal_exists = conn.query_row(
+        "SELECT 1 FROM goals WHERE id = ?1",
+        params![&id],
+        |_| Ok(()),
+    ).is_ok();
+    
+    if !goal_exists {
+        return Err(AppError::entity_not_found("goal", &id));
+    }
     
     // Check if goal has any projects
     let project_count: i32 = conn.query_row(
         "SELECT COUNT(*) FROM projects WHERE goal_id = ?1",
         params![&id],
         |row| row.get(0),
-    )?;
+    ).map_err(|e| {
+        error!("Failed to check projects for goal {}: {}", id, e);
+        AppError::from(e)
+    })?;
     
     if project_count > 0 {
         return Err(AppError::Validation {
             field: "goal_id".to_string(),
-            reason: "Cannot delete goal with associated projects".to_string(),
+            reason: format!("Cannot delete goal with {} associated project(s). Please delete or reassign the projects first.", project_count),
             code: ErrorCode::InvalidEntityReference,
-            context: None,
+            context: Some(ErrorContext {
+                user_action: "Deleting goal".to_string(),
+                recovery_suggestions: vec![
+                    "Delete all projects associated with this goal first".to_string(),
+                    "Move the projects to a different goal before deleting".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            }),
         });
     }
     
-    conn.execute("DELETE FROM goals WHERE id = ?1", params![&id])?;
+    // Delete from search index first
+    if let Err(e) = conn.execute(
+        "DELETE FROM search_index WHERE entity_id = ?1",
+        params![&id],
+    ) {
+        error!("Failed to remove goal from search index: {}", e);
+        // Continue with deletion even if search index cleanup fails
+    }
     
+    conn.execute("DELETE FROM goals WHERE id = ?1", params![&id])
+        .map_err(|e| {
+            error!("Failed to delete goal {}: {}", id, e);
+            AppError::from(e).with_context(ErrorContext {
+                user_action: "Deleting goal".to_string(),
+                recovery_suggestions: vec![
+                    "The goal may be in use by another process".to_string(),
+                    "Try again after a moment".to_string(),
+                ],
+                recoverable: true,
+                help_url: None,
+            })
+        })?;
+    
+    info!("Successfully deleted goal with ID: {}", id);
     Ok(())
 }
 

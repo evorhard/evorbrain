@@ -1,2 +1,6 @@
+// Temporarily disabled until tauri test feature is added
+// #[cfg(test)]
+// mod area_tests;
+
 #[cfg(test)]
-mod area_tests;
+mod goal_tests;

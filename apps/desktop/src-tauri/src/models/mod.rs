@@ -120,10 +120,11 @@ pub enum RecurrenceFrequency {
 }
 
 /// Goal status values
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub enum GoalStatus {
-    Active,
+    NotStarted,
+    InProgress,
     Completed,
     Abandoned,
 }
@@ -230,7 +231,7 @@ impl Goal {
             area_id,
             target_date: None,
             progress: 0,
-            status: GoalStatus::Active,
+            status: GoalStatus::NotStarted,
             sort_order: 0,
         }
     }

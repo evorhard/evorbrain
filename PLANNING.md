@@ -662,4 +662,20 @@ For existing development databases after entity implementation:
 
 ---
 
+### ADR-020: Goal Entity Status Values
+
+**Status**: Accepted  
+**Date**: 2025-07-26  
+**Context**: Goal entities needed consistent status values matching TypeScript interfaces  
+**Decision**: Updated Goal status enum to use "not-started", "in-progress", "completed", "abandoned" with kebab-case serialization  
+**Consequences**: Consistent API between frontend and backend, proper status progression tracking, alignment with task management patterns
+
+### ADR-021: Enhanced Goal CRUD Operations
+
+**Status**: Accepted  
+**Date**: 2025-07-26  
+**Context**: Goal CRUD operations needed comprehensive validation and error handling similar to Area entities  
+**Decision**: Implemented full Goal CRUD with area association validation, partial updates, cascade checking, and search indexing  
+**Consequences**: Robust goal management, consistent error messages, safer cascade operations, improved user experience
+
 This planning document is a living document and will evolve as the project develops. All major technical decisions should be documented here with appropriate ADRs (Architecture Decision Records).

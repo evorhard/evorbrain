@@ -58,6 +58,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Added detailed error handling with user-friendly messages and recovery suggestions
     - Created comprehensive test suite for Area CRUD operations
     - Integrated logging for all Area operations
+  - Completed Goal entity CRUD operations (TASK-030):
+    - Implemented create_goal with area association validation and automatic sort_order calculation
+    - Added get_goal, get_all_goals, and get_goals_by_area with proper ordering
+    - Enhanced update_goal to support partial updates for all fields including progress and tags
+    - Implemented delete_goal with project cascade checking and search index cleanup
+    - Fixed Goal status enum to match TypeScript interface ("not-started", "in-progress", "completed", "abandoned")
+    - Added comprehensive validation for progress values (0-100)
+    - Created unit tests for Goal CRUD operations with temporary database support
+    - Integrated error handling with detailed recovery suggestions
 
 - **Architecture Decision Records (ADRs)** - Added 6 new ADRs based on code quality analysis:
   - ADR-014: State Management Implementation with Zustand
