@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Code Cleanup and Improvements**
+  - Removed unused `@mantine/dates` dependency
+  - Created proper "Coming Soon" pages for all placeholder routes
+  - Added entity list pages (Areas, Goals, Projects, Tasks) with proper routing
+  - Cleaned up empty onClick handlers in Sidebar.tsx with proper navigation
+  - Command Palette now shows informative notification until implemented
+
 - **Phase 2: Core Features** (In Progress)
   - Starting implementation of data model for Areas, Goals, Projects, and Tasks
   - Beginning work on file storage system with YAML frontmatter

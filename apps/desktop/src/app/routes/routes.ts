@@ -4,7 +4,12 @@ export const ROUTES = {
   CALENDAR_VIEW: '/calendar',
   HIERARCHY_VIEW: '/hierarchy',
   SETTINGS: '/settings',
-  // Entity routes
+  // Entity list routes
+  AREAS_LIST: '/areas',
+  GOALS_LIST: '/goals',
+  PROJECTS_LIST: '/projects',
+  TASKS_LIST: '/tasks',
+  // Entity detail routes
   AREA: '/area/:id',
   GOAL: '/goal/:id',
   PROJECT: '/project/:id',

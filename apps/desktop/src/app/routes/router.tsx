@@ -11,6 +11,15 @@ const DailyViewPage = lazy(() => import('../../pages/daily-view/DailyViewPage'))
 const CalendarViewPage = lazy(() => import('../../pages/calendar-view/CalendarViewPage'));
 const HierarchyViewPage = lazy(() => import('../../pages/hierarchy-view/HierarchyViewPage'));
 const SettingsPage = lazy(() => import('../../pages/settings/SettingsPage'));
+const AreaDetailPage = lazy(() => import('../../pages/area-detail/AreaDetailPage'));
+const GoalDetailPage = lazy(() => import('../../pages/goal-detail/GoalDetailPage'));
+const ProjectDetailPage = lazy(() => import('../../pages/project-detail/ProjectDetailPage'));
+const TaskDetailPage = lazy(() => import('../../pages/task-detail/TaskDetailPage'));
+const SearchPage = lazy(() => import('../../pages/search/SearchPage'));
+const AreasListPage = lazy(() => import('../../pages/areas-list/AreasListPage'));
+const GoalsListPage = lazy(() => import('../../pages/goals-list/GoalsListPage'));
+const ProjectsListPage = lazy(() => import('../../pages/projects-list/ProjectsListPage'));
+const TasksListPage = lazy(() => import('../../pages/tasks-list/TasksListPage'));
 
 // Loading component
 function PageLoader() {
@@ -28,8 +37,8 @@ function RootLayout() {
   );
 }
 
-// Error boundary component
-function ErrorPage() {
+// Error boundary component - kept for future use
+function _ErrorPage() {
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="text-center">
@@ -53,12 +62,17 @@ export function AppRouter() {
           <Route element={<CalendarViewPage />} path={ROUTES.CALENDAR_VIEW} />
           <Route element={<HierarchyViewPage />} path={ROUTES.HIERARCHY_VIEW} />
           <Route element={<SettingsPage />} path={ROUTES.SETTINGS} />
-          {/* Entity routes - TODO: implement these pages */}
-          <Route element={<div>Area Detail Page - TODO</div>} path={ROUTES.AREA} />
-          <Route element={<div>Goal Detail Page - TODO</div>} path={ROUTES.GOAL} />
-          <Route element={<div>Project Detail Page - TODO</div>} path={ROUTES.PROJECT} />
-          <Route element={<div>Task Detail Page - TODO</div>} path={ROUTES.TASK} />
-          <Route element={<div>Search Page - TODO</div>} path={ROUTES.SEARCH} />
+          {/* Entity list routes */}
+          <Route element={<AreasListPage />} path={ROUTES.AREAS_LIST} />
+          <Route element={<GoalsListPage />} path={ROUTES.GOALS_LIST} />
+          <Route element={<ProjectsListPage />} path={ROUTES.PROJECTS_LIST} />
+          <Route element={<TasksListPage />} path={ROUTES.TASKS_LIST} />
+          {/* Entity detail routes */}
+          <Route element={<AreaDetailPage />} path={ROUTES.AREA} />
+          <Route element={<GoalDetailPage />} path={ROUTES.GOAL} />
+          <Route element={<ProjectDetailPage />} path={ROUTES.PROJECT} />
+          <Route element={<TaskDetailPage />} path={ROUTES.TASK} />
+          <Route element={<SearchPage />} path={ROUTES.SEARCH} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Stack, NavLink, TextInput, ScrollArea, Box, Divider, Text } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import {
   IconSearch,
   IconCalendar,
@@ -50,30 +51,22 @@ export function Sidebar() {
     {
       label: 'Life Areas',
       icon: <IconFolder size={20} />,
-      onClick: () => {
-        /* TODO: Implement areas list view */
-      },
+      path: ROUTES.AREAS_LIST,
     },
     {
       label: 'Goals',
       icon: <IconTarget size={20} />,
-      onClick: () => {
-        /* TODO: Implement goals list view */
-      },
+      path: ROUTES.GOALS_LIST,
     },
     {
       label: 'Projects',
       icon: <IconFolder size={20} />,
-      onClick: () => {
-        /* TODO: Implement projects list view */
-      },
+      path: ROUTES.PROJECTS_LIST,
     },
     {
       label: 'Tasks',
       icon: <IconCheckbox size={20} />,
-      onClick: () => {
-        /* TODO: Implement tasks list view */
-      },
+      path: ROUTES.TASKS_LIST,
     },
   ];
 
@@ -82,7 +75,11 @@ export function Sidebar() {
       label: 'Command Palette',
       icon: <IconCommand size={20} />,
       onClick: () => {
-        /* TODO: Open command palette */
+        notifications.show({
+          title: 'Coming Soon',
+          message: 'Command palette will be available in a future update.',
+          color: 'blue',
+        });
       },
     },
     {
